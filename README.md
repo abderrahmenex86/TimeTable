@@ -43,10 +43,10 @@ however much of it is already on the calendar.
   undo.
 - **Subjects** can be renamed and recoloured from the task panel; the change
   applies to every session using them.
-- **Find a slot**: every task has a button that places it in the earliest gap
+- Find a slot: every task has a button that places it in the earliest gap
   before its deadline. This is also the keyboard and touch path. Dragging is
   mouse-only on purpose.
-- **Calendar lock**: with the lock on, tasks cannot be dragged onto the grid at
+- Calendar lock: with the lock on, tasks cannot be dragged onto the grid at
   all, which is what you want when you are just reading the week.
 - **Light and dark** themes that follow the paper metaphor in both directions.
 - **Settings** for the first day of the week, 12- or 24-hour times, the hours
@@ -54,7 +54,7 @@ however much of it is already on the calendar.
 - **Undo** on every destructive action, from a single snapshot stack.
 - **Print stylesheet** that drops the chrome, keeps the colours, and puts the
   week on one page.
-- **Phone layout**: a day strip and agenda list rather than a squeezed grid,
+- Phone layout: a day strip and agenda list rather than a squeezed grid,
   with tasks in a bottom drawer.
 
 ## Running it
