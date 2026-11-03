@@ -130,6 +130,8 @@ baseline.
 - A session is either weekly or dated; there is no "every second Tuesday"
   rule beyond odd/even weeks.
 - Tasks do not recur.
+- The 12/24-hour setting formats the grid and deadlines, but not the native
+  time inputs: browsers render `<input type="time">` in the OS locale.
 - Dragging is mouse-only. Touch and keyboard use "find a slot".
 
 ## Stack

@@ -37,51 +37,6 @@ export function formatClock(minute: Minute, format: TimeFormat = '24h'): string 
   return `${hour12}:${pad(minutes)} ${suffix}`
 }
 
-/**
- * Lenient parser for the free-text time field.
- *
- * Accepts `9:00`, `09:00`, `9:00 pm`, `9pm`, `21:00` and `2100`, because people
- * type whichever the field happens to show them.
- */
-export function parseTimeInput(value: string, format: TimeFormat = '24h'): Minute | null {
-  const raw = value.trim().toLowerCase().replace(/\s+/g, ' ')
-  if (!raw) return null
-
-  const withSuffix = /^(\d{1,2})(?::([0-5]\d))?\s*(am|pm)$/.exec(raw)
-  if (withSuffix) {
-    const hours = Number(withSuffix[1])
-    const minutes = Number(withSuffix[2] ?? '0')
-    if (hours < 1 || hours > 12) return null
-    const base = hours % 12
-    return (withSuffix[3] === 'pm' ? base + 12 : base) * MINUTES_PER_HOUR + minutes
-  }
-
-  const colon = /^(\d{1,2}):([0-5]\d)$/.exec(raw)
-  if (colon) {
-    const hours = Number(colon[1])
-    const minutes = Number(colon[2])
-    return hours > 23 ? null : hours * MINUTES_PER_HOUR + minutes
-  }
-
-  // Bare `0900` / `2100` — only unambiguous in 24-hour mode.
-  if (format === '24h') {
-    const compact = /^([01]\d|2[0-3])([0-5]\d)$/.exec(raw)
-    if (compact) {
-      return Number(compact[1]) * MINUTES_PER_HOUR + Number(compact[2])
-    }
-  }
-
-  const hourOnly = /^(\d{1,2})$/.exec(raw)
-  if (hourOnly) {
-    const hours = Number(hourOnly[1])
-    if (hours > 23) return null
-    // In 12-hour mode a bare "9" means 9 AM, not 21:00.
-    return hours * MINUTES_PER_HOUR
-  }
-
-  return null
-}
-
 export function clampMinute(minute: Minute): Minute {
   return Math.min(MINUTES_PER_DAY, Math.max(0, Math.round(minute)))
 }

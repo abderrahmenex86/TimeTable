@@ -14,6 +14,7 @@ import type {
 } from '@/domain/types'
 import {
   createEmptyData,
+  DEFAULT_SETTINGS,
   SCHEMA_VERSION,
   type ThemeMode,
   type TimetableData,
@@ -344,6 +345,17 @@ export const useTimetable = create<TimetableState>()(
     {
       name: 'timetable',
       version: SCHEMA_VERSION,
+      /**
+       * v1 shipped a grid that ended at 23:00. Anyone who never touched the
+       * setting should get the new midnight default rather than being stuck on
+       * the old one forever.
+       */
+      migrate: (persisted) => {
+        const state = persisted as TimetableData
+        const settings = { ...DEFAULT_SETTINGS, ...(state.settings ?? {}) }
+        if (settings.dayEnd === 23 * 60) settings.dayEnd = 24 * 60
+        return { ...state, settings }
+      },
       storage: createIndexedDbStorage<TimetableData>(),
       partialize: (state) => pickData(state),
       onRehydrateStorage: () => (state) => {

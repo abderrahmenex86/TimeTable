@@ -107,7 +107,7 @@ export function SettingsView() {
 
           <Section
             title="Time format"
-            description="How clock times are written everywhere in the app."
+            description="How times are written on the grid and in deadlines. Time fields follow your system settings."
           >
             <div className="flex gap-2">
               {(
@@ -143,7 +143,7 @@ export function SettingsView() {
 
           <Section
             title="Day view"
-            description="The hours the grid shows. A narrower span gives every hour more room."
+            description="The hours the grid shows. Set the last hour to 12:00 AM to run to midnight."
           >
             <div className="flex items-end gap-2">
               <div className="flex flex-1 flex-col gap-1.5">
@@ -152,7 +152,6 @@ export function SettingsView() {
                   id="day-start"
                   value={dayStart}
                   onChange={(minute) => setDayWindow(minute, dayEnd)}
-                  format={timeFormat}
                 />
               </div>
               <div className="flex flex-1 flex-col gap-1.5">
@@ -160,8 +159,10 @@ export function SettingsView() {
                 <TimeField
                   id="day-end"
                   value={dayEnd}
-                  onChange={(minute) => setDayWindow(dayStart, minute)}
-                  format={timeFormat}
+                  onChange={(minute) =>
+                    // 12:00 AM in the end field means "to midnight", not 00:00.
+                    setDayWindow(dayStart, minute === 0 ? 24 * 60 : minute)
+                  }
                 />
               </div>
             </div>

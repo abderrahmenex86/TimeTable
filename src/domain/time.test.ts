@@ -4,7 +4,6 @@ import {
   formatDuration,
   formatRange,
   parseClock,
-  parseTimeInput,
 } from './time'
 
 describe('formatClock', () => {
@@ -55,35 +54,6 @@ describe('parseClock', () => {
     expect(parseClock('24:00')).toBeNull()
     expect(parseClock('9:60')).toBeNull()
     expect(parseClock('half nine')).toBeNull()
-  })
-})
-
-describe('parseTimeInput', () => {
-  it('accepts 24-hour forms', () => {
-    expect(parseTimeInput('09:30')).toBe(570)
-    expect(parseTimeInput('21:00')).toBe(1260)
-    expect(parseTimeInput('0930')).toBe(570)
-    expect(parseTimeInput('2100')).toBe(1260)
-  })
-
-  it('accepts 12-hour forms with a suffix', () => {
-    expect(parseTimeInput('9:30 AM')).toBe(570)
-    expect(parseTimeInput('9:30am')).toBe(570)
-    expect(parseTimeInput('9 pm')).toBe(1260)
-    expect(parseTimeInput('12:00 AM')).toBe(0)
-    expect(parseTimeInput('12:00 PM')).toBe(720)
-  })
-
-  it('treats a bare hour as 24-hour input', () => {
-    expect(parseTimeInput('9')).toBe(540)
-    expect(parseTimeInput('21')).toBe(1260)
-  })
-
-  it('rejects values it cannot resolve', () => {
-    expect(parseTimeInput('')).toBeNull()
-    expect(parseTimeInput('13:00 PM')).toBeNull()
-    expect(parseTimeInput('25:00')).toBeNull()
-    expect(parseTimeInput('lunchtime')).toBeNull()
   })
 })
 

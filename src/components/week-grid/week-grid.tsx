@@ -97,6 +97,8 @@ export function WeekGrid({
     ) {
       list.push(hour)
     }
+    // A window shorter than two hours would otherwise render no labels at all.
+    if (list.length === 0) list.push(Math.floor(window.start / 60))
     return list
   }, [window])
 
@@ -300,8 +302,11 @@ function TimeGutter({
       {hours.map((hour) => (
         <span
           key={hour}
-          className="absolute right-2 -translate-y-1/2 text-[0.62rem] tabular-nums text-ink-40"
-          style={{ top: topFor(hour * 60, window) }}
+          className={cn(
+            'absolute right-2 text-[0.62rem] tabular-nums text-ink-40',
+            hour * 60 === window.start ? '' : '-translate-y-1/2',
+          )}
+          style={{ top: topFor(hour * 60, window) + (hour * 60 === window.start ? 2 : 0) }}
           data-num
         >
           {formatClock(hour * 60, timeFormat)}

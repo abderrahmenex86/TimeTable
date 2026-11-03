@@ -33,7 +33,6 @@ import {
 } from '@/domain/types'
 import { createId } from '@/lib/id'
 import { cn } from '@/lib/utils'
-import { useTimeFormat } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
@@ -99,7 +98,6 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
   const deleteEntry = useTimetable((state) => state.deleteEntry)
   const addSubject = useTimetable((state) => state.addSubject)
   const term = useTimetable((state) => state.term)
-  const timeFormat = useTimeFormat()
   const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(entry))
@@ -278,7 +276,6 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
                 id="entry-start"
                 value={form.start}
                 onChange={(minute) => set('start', minute)}
-                format={timeFormat}
               />
             </div>
 
@@ -288,7 +285,6 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
                 id="entry-end"
                 value={form.end}
                 onChange={(minute) => set('end', minute)}
-                format={timeFormat}
               />
             </div>
 

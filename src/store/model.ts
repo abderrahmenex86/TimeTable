@@ -32,7 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tasksLocked: false,
   timeFormat: '24h',
   dayStart: 8 * 60,
-  dayEnd: 23 * 60,
+  dayEnd: 24 * 60,
 }
 
 /**
@@ -52,7 +52,7 @@ export type TimetableData = {
   settings: Settings
 }
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 /** A blank slate that still knows which week it is. */
 export function createEmptyData(

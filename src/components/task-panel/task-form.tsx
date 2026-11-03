@@ -23,7 +23,6 @@ import { TimeField } from '@/components/fields/time-field'
 import { normalizeEstimate } from '@/domain/tasks'
 import type { DateKey, Priority, Subject, Task } from '@/domain/types'
 import { createId } from '@/lib/id'
-import { useTimeFormat } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
@@ -72,7 +71,6 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
   const addTask = useTimetable((state) => state.addTask)
   const updateTask = useTimetable((state) => state.updateTask)
   const deleteTask = useTimetable((state) => state.deleteTask)
-  const timeFormat = useTimeFormat()
   const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(task))
@@ -202,7 +200,6 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
                 id="task-time"
                 value={form.time}
                 onChange={(minute) => set('time', minute)}
-                format={timeFormat}
               />
             </div>
 
