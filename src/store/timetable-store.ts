@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { startOfWeek, todayKey, weekIndexFor } from '@/domain/dates'
+import { startOfWeek, todayKey } from '@/domain/dates'
 import { MINUTES_PER_DAY, type TimeFormat } from '@/domain/time'
 import type {
   DateKey,
@@ -77,8 +77,14 @@ type Actions = {
 }
 
 export type TimetableState = TimetableData & {
-  /** Which teaching week the grid is showing. Transient. */
-  weekIndex: number
+  /**
+   * Which teaching week the grid is showing. Transient.
+   *
+   * `null` means "no explicit navigation yet", which resolves to the week
+   * containing today against the *persisted* term. Deriving the opening week
+   * from the seed instead pinned every load to week 9.
+   */
+  weekIndex: number | null
   /** Whether free gaps are highlighted on the grid. Transient. */
   showFreeTime: boolean
   /** False until IndexedDB has been read. */
@@ -91,17 +97,12 @@ export const useTimetable = create<TimetableState>()(
   persist(
     (set) => {
       const seed = createSeedData()
-      const startWeek = clampWeek(
-        seed.term.weekCount,
-        weekIndexFor(seed.term, todayKey()),
-      )
-
       const pushUndo = (state: TimetableState): TimetableData[] =>
         [...state.undoStack, pickData(state)].slice(-UNDO_LIMIT)
 
       return {
         ...seed,
-        weekIndex: startWeek,
+        weekIndex: null,
         showFreeTime: false,
         hydrated: false,
         undoStack: [],
@@ -111,13 +112,7 @@ export const useTimetable = create<TimetableState>()(
             weekIndex: clampWeek(state.term.weekCount, index),
           })),
 
-        goToToday: () =>
-          set((state) => ({
-            weekIndex: clampWeek(
-              state.term.weekCount,
-              weekIndexFor(state.term, todayKey()),
-            ),
-          })),
+        goToToday: () => set({ weekIndex: null }),
 
         setHydrated: () => set({ hydrated: true }),
 
@@ -324,10 +319,7 @@ export const useTimetable = create<TimetableState>()(
             )
             return {
               ...fresh,
-              weekIndex: clampWeek(
-                fresh.term.weekCount,
-                weekIndexFor(fresh.term, todayKey()),
-              ),
+              weekIndex: null,
               undoStack: pushUndo(state),
             }
           }),
@@ -337,7 +329,7 @@ export const useTimetable = create<TimetableState>()(
             ...createEmptyData(todayKey(), state.settings.weekStartsOn),
             // Keep the user's preferences; only the timetable is cleared.
             settings: state.settings,
-            weekIndex: 1,
+            weekIndex: null,
             undoStack: pushUndo(state),
           })),
       }

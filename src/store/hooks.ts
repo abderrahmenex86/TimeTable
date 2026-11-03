@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { clampWeekIndex, weekDates, weekIndexFor } from '@/domain/dates'
+import { clampWeekIndex, todayKey, weekDates, weekIndexFor } from '@/domain/dates'
 import { buildSchedules } from '@/domain/free-time'
 import { expandRange, expandWeek } from '@/domain/recurrence'
 import type { DateKey, Interval, Occurrence } from '@/domain/types'
@@ -20,7 +20,14 @@ export function useWeek() {
   const entries = useTimetable((state) => state.entries)
   const exceptions = useTimetable((state) => state.exceptions)
 
-  const weekIndex = clampWeekIndex(term, requested)
+  // `null` means the user has not navigated, so follow the week that contains
+  // today — resolved against the persisted term, not the seed.
+  const currentWeek = useMemo(
+    () => clampWeekIndex(term, weekIndexFor(term, todayKey())),
+    [term],
+  )
+  const weekIndex =
+    requested === null ? currentWeek : clampWeekIndex(term, requested)
 
   const dates = useMemo(
     () => weekDates(term, weekIndex),

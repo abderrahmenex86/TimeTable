@@ -29,8 +29,9 @@ however much of it is already on the calendar.
 
 ## What it does
 
-- **Week grid** with recurring sessions (every week, odd weeks or even weeks),
-  dated sessions on one or more specific dates, and term week ranges.
+- **Week grid** that opens on the week containing today, with recurring
+  sessions (every week, odd weeks or even weeks), dated sessions on one or more
+  specific dates, and term week ranges.
 - **Task panel** grouped by urgency, with a segmented bar showing how much of
   each task's estimate is already placed.
 - **Free time** as a toggle: the gaps get hatched, with a duration in each.
