@@ -82,7 +82,7 @@ export function SettingsView() {
                     aria-pressed={active}
                     onClick={() => setTheme(option.value)}
                     className={cn(
-                      'flex flex-1 items-center justify-center gap-2 border px-3 py-2 text-[0.82rem] transition-colors',
+                      'flex flex-1 items-center justify-center gap-2 border-[1.5px] px-3 py-2 font-hand text-[0.85rem] shadow-[2px_3px_0_var(--fg-15)] transition-colors',
                       active
                         ? 'border-sky-pen bg-sky-fill text-sky-pen'
                         : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
@@ -113,7 +113,7 @@ export function SettingsView() {
                     title={DAY_NAMES[day]}
                     onClick={() => setWeekStartsOn(day)}
                     className={cn(
-                      'border px-1 py-1.5 text-[0.74rem] transition-colors',
+                      'border-[1.5px] px-1 py-1.5 font-hand text-[0.78rem] shadow-[1.5px_2px_0_var(--fg-15)] transition-colors',
                       active
                         ? 'border-sky-pen bg-sky-fill text-sky-pen'
                         : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
@@ -134,7 +134,6 @@ export function SettingsView() {
             <Button
               variant={tasksLocked ? 'default' : 'outline'}
               size="sm"
-              className="font-hand"
               aria-pressed={tasksLocked}
               onClick={toggleTaskLock}
             >
@@ -155,7 +154,6 @@ export function SettingsView() {
               <Button
                 variant="outline"
                 size="sm"
-                className="font-hand"
                 onClick={() => run('Demo data restored', resetToDemo)}
               >
                 Reset demo data
@@ -163,7 +161,6 @@ export function SettingsView() {
               <Button
                 variant="destructive"
                 size="sm"
-                className="font-hand"
                 onClick={() => run('Everything cleared', clearAll)}
               >
                 Clear all data

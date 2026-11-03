@@ -32,28 +32,22 @@ const pad = (value: number) => String(value).padStart(2, '0')
 
 /**
  * The clock is its own component so a one-second tick does not re-render the
- * toolbar around it.
+ * toolbar around it. Date and time share one face and one size — it reads as a
+ * single stamp rather than two pieces of metadata.
  */
 function Clock() {
   const now = useNow(1000)
   const key = todayKey(now)
 
   return (
-    <div className="flex items-baseline gap-2 whitespace-nowrap">
-      <span className="font-hand text-[1.05rem] leading-none text-ink">
-        {WEEKDAY_LABELS[weekdayOf(key)]}
-      </span>
-      <span className="text-[0.78rem] text-ink-60" data-num>
-        {Number(key.slice(8))} {MONTHS[Number(key.slice(5, 7)) - 1]}
-      </span>
-      <span
-        className="text-[0.8rem] tabular-nums text-ink-60"
-        data-num
-        aria-label="Current time"
-      >
-        {pad(now.getHours())}:{pad(now.getMinutes())}
-      </span>
-    </div>
+    <span
+      className="whitespace-nowrap font-hand text-[1.05rem] leading-none text-ink"
+      title="Current date and time"
+    >
+      {WEEKDAY_LABELS[weekdayOf(key)]} {Number(key.slice(8))}{' '}
+      {MONTHS[Number(key.slice(5, 7)) - 1]} · {pad(now.getHours())}:
+      {pad(now.getMinutes())}
+    </span>
   )
 }
 
@@ -64,9 +58,8 @@ type TopBarProps = {
 }
 
 /**
- * The toolbar. Date and time on the left, week navigation in the middle,
- * actions on the right — and it sits inside the same padded column as the
- * calendar and task cards below it.
+ * The toolbar. Week selection first, the date and time centred in the bar, and
+ * the actions on the right.
  */
 export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
   const { term, weekIndex } = useWeek()
@@ -84,14 +77,10 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
   const atEnd = weekIndex >= term.weekCount
 
   return (
-    <header className="no-print flex flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl border border-rule bg-paper-raised px-3 py-2">
-      <Clock />
-
-      <span className="mx-1 hidden h-5 w-px bg-rule sm:block" />
-
-      <div className="flex items-center gap-0.5">
+    <header className="no-print relative flex flex-wrap items-center gap-x-2 gap-y-2 rounded-2xl border border-rule bg-paper-raised px-3 py-2">
+      <div className="mx-auto flex items-center gap-1 sm:mx-0">
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon-sm"
           aria-label="Previous week"
           disabled={atStart}
@@ -99,17 +88,18 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
         >
           <FiChevronLeft />
         </Button>
-        <button
-          type="button"
+
+        <Button
+          variant="outline"
+          size="sm"
           onClick={goToToday}
-          className="rounded-md px-1.5 py-1 text-[0.78rem] tabular-nums text-ink-60 transition-colors hover:text-ink"
-          data-num
           title="Jump to the current week"
         >
           Week {weekIndex} / {term.weekCount}
-        </button>
+        </Button>
+
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon-sm"
           aria-label="Next week"
           disabled={atEnd}
@@ -119,11 +109,14 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
         </Button>
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center gap-2">
+      <div className="pointer-events-none flex w-full justify-center sm:absolute sm:left-1/2 sm:w-auto sm:-translate-x-1/2">
+        <Clock />
+      </div>
+
+      <div className="mx-auto flex flex-wrap items-center gap-2 sm:mx-0 sm:ml-auto">
         <Button
           variant={showFreeTime ? 'default' : 'outline'}
           size="sm"
-          className="font-hand"
           aria-pressed={showFreeTime}
           onClick={toggleFreeTime}
         >
@@ -133,7 +126,7 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
         <Button
           variant="outline"
           size="sm"
-          className="font-hand lg:hidden"
+          className="lg:hidden"
           onClick={onOpenTasks}
         >
           Tasks {countOpen(tasks)}
@@ -141,7 +134,7 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="font-hand">
+            <Button size="sm">
               <FiPlus data-icon="inline-start" />
               Add
             </Button>
@@ -154,11 +147,11 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon-sm"
                 aria-label={
                   theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
@@ -173,7 +166,7 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon-sm" asChild>
+              <Button variant="outline" size="icon-sm" asChild>
                 <Link to="/settings" aria-label="Settings">
                   <FiSettings />
                 </Link>
@@ -185,7 +178,7 @@ export function TopBar({ onNewTask, onNewSession, onOpenTasks }: TopBarProps) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={tasksLocked ? 'default' : 'ghost'}
+                variant={tasksLocked ? 'default' : 'outline'}
                 size="icon-sm"
                 aria-label={
                   tasksLocked

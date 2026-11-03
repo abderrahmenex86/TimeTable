@@ -85,6 +85,34 @@ body {
 
 /* ------------------------------------------------- shadcn primitive reskin --- */
 
+/*
+ * One button look: hand-lettered label, sketched radius, ink border, offset
+ * shadow. Variants differ only by fill, so a toolbar of mixed actions still
+ * reads as one family.
+ */
+[data-slot='button'] {
+  font-family: var(--font-hand);
+  letter-spacing: 0.015em;
+}
+
+[data-slot='button']:not([data-variant='link']) {
+  border-width: 1.5px;
+  border-color: var(--line);
+  box-shadow: 2px 3px 0 var(--fg-15);
+}
+
+[data-slot='button'][data-variant='default'] {
+  border-color: color-mix(in srgb, var(--sky-pen) 38%, transparent);
+}
+
+[data-slot='button'][data-variant='destructive'] {
+  border-color: color-mix(in srgb, var(--rose-pen) 38%, transparent);
+}
+
+[data-slot='button'][data-size^='icon'] {
+  box-shadow: 1.5px 2px 0 var(--fg-15);
+}
+
 [data-slot='button'],
 [data-slot='input'],
 [data-slot='textarea'],
@@ -106,20 +134,6 @@ body {
     background-color 120ms var(--ease-pen),
     box-shadow 120ms var(--ease-pen),
     border-color 120ms var(--ease-pen);
-}
-
-[data-slot='button'][data-variant='default'] {
-  border-color: color-mix(in srgb, var(--sky-pen) 30%, transparent);
-  box-shadow: 2px 3px 0 var(--fg-15);
-}
-
-[data-slot='button'][data-variant='outline'] {
-  border-color: var(--fg-30);
-  box-shadow: 2px 3px 0 var(--fg-15);
-}
-
-[data-slot='button'][data-variant='destructive'] {
-  border-color: color-mix(in srgb, var(--rose-pen) 30%, transparent);
 }
 
 [data-slot='button']:active:not(:disabled) {
