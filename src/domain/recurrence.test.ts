@@ -1,0 +1,161 @@
+import { describe, expect, it } from 'vitest'
+import { expandRange, expandWeek, groupOccurrencesByDate } from './recurrence'
+import type { EntryException, Term, TimetableEntry } from './types'
+
+const term: Term = {
+  id: 't1',
+  name: 'Fall 2026',
+  startDate: '2026-09-07',
+  weekCount: 12,
+}
+
+const entries: TimetableEntry[] = [
+  {
+    id: 'linalg',
+    subjectId: 'math',
+    title: 'Linear Algebra',
+    location: 'B3',
+    recurrence: { days: [1, 3], start: 540, end: 630, parity: 'all' },
+  },
+  {
+    id: 'physics',
+    subjectId: 'phys',
+    title: 'Physics',
+    recurrence: { days: [2, 4], start: 660, end: 780, parity: 'odd' },
+  },
+  {
+    id: 'lab',
+    subjectId: 'phys',
+    title: 'Physics Lab',
+    recurrence: {
+      days: [5],
+      start: 840,
+      end: 1020,
+      parity: 'all',
+      weeks: { from: 2, to: 4 },
+    },
+  },
+]
+
+describe('expandWeek', () => {
+  it('projects a weekly rule onto real dates', () => {
+    const result = expandWeek(term, entries, [], 9)
+    const linalg = result.filter((o) => o.entryId === 'linalg')
+    expect(linalg).toHaveLength(2)
+    expect(linalg.map((o) => o.date)).toEqual(['2026-11-02', '2026-11-04'])
+  })
+
+  it('carries subject, title and location through', () => {
+    const [first] = expandWeek(term, entries, [], 9)
+    expect(first).toMatchObject({
+      entryId: 'linalg',
+      subjectId: 'math',
+      title: 'Linear Algebra',
+      location: 'B3',
+      start: 540,
+      end: 630,
+    })
+  })
+
+  it('only shows odd-parity entries in odd weeks', () => {
+    const odd = expandWeek(term, entries, [], 9)
+    expect(odd.some((o) => o.entryId === 'physics')).toBe(true)
+
+    const even = expandWeek(term, entries, [], 10)
+    expect(even.some((o) => o.entryId === 'physics')).toBe(false)
+  })
+
+  it('respects an explicit week range', () => {
+    const weekOne = expandWeek(term, entries, [], 1)
+    expect(weekOne.some((o) => o.entryId === 'lab')).toBe(false)
+
+    const weekThree = expandWeek(term, entries, [], 3)
+    expect(weekThree.some((o) => o.entryId === 'lab')).toBe(true)
+
+    const weekFive = expandWeek(term, entries, [], 5)
+    expect(weekFive.some((o) => o.entryId === 'lab')).toBe(false)
+  })
+
+  it('returns nothing outside the term', () => {
+    expect(expandWeek(term, entries, [], 0)).toEqual([])
+    expect(expandWeek(term, entries, [], 13)).toEqual([])
+  })
+
+  it('cancels a single session without touching the series', () => {
+    const exceptions: EntryException[] = [
+      { entryId: 'linalg', date: '2026-11-02', kind: 'cancelled' },
+    ]
+    const result = expandWeek(term, entries, exceptions, 9)
+    const linalg = result.filter((o) => o.entryId === 'linalg')
+
+    expect(linalg.map((o) => o.date)).toEqual(['2026-11-04'])
+    // The following week is untouched.
+    const next = expandWeek(term, entries, exceptions, 10)
+    expect(next.filter((o) => o.entryId === 'linalg')).toHaveLength(2)
+  })
+
+  it('ignores an exception for a different entry', () => {
+    const exceptions: EntryException[] = [
+      { entryId: 'physics', date: '2026-11-02', kind: 'cancelled' },
+    ]
+    expect(
+      expandWeek(term, entries, exceptions, 9).filter(
+        (o) => o.entryId === 'linalg',
+      ),
+    ).toHaveLength(2)
+  })
+
+  it('emits one occurrence for a rule with duplicate days', () => {
+    const duplicate: TimetableEntry = {
+      id: 'dup',
+      subjectId: 'math',
+      title: 'Duplicate',
+      recurrence: { days: [1, 1], start: 540, end: 600, parity: 'all' },
+    }
+    expect(expandWeek(term, [duplicate], [], 9)).toHaveLength(1)
+  })
+
+  it('skips rules whose end is not after their start', () => {
+    const broken: TimetableEntry = {
+      id: 'broken',
+      subjectId: 'math',
+      title: 'Broken',
+      recurrence: { days: [1], start: 600, end: 600, parity: 'all' },
+    }
+    expect(expandWeek(term, [broken], [], 9)).toEqual([])
+  })
+
+  it('sorts by date then start time', () => {
+    const result = expandWeek(term, entries, [], 9)
+    const keys = result.map((o) => `${o.date}T${String(o.start).padStart(4, '0')}`)
+    expect([...keys].sort()).toEqual(keys)
+  })
+})
+
+describe('expandRange', () => {
+  it('spans weeks and clips to the range', () => {
+    const result = expandRange(term, entries, [], '2026-11-02', '2026-11-08')
+    expect(result).toHaveLength(expandWeek(term, entries, [], 9).length)
+  })
+
+  it('crosses a week boundary', () => {
+    const result = expandRange(term, entries, [], '2026-11-04', '2026-11-10')
+    const dates = [...new Set(result.map((o) => o.date))]
+    expect(dates).toContain('2026-11-04')
+    expect(dates).toContain('2026-11-09')
+    expect(dates).not.toContain('2026-11-03')
+  })
+
+  it('is empty when the range is inverted', () => {
+    expect(expandRange(term, entries, [], '2026-11-08', '2026-11-02')).toEqual([])
+  })
+})
+
+describe('groupOccurrencesByDate', () => {
+  it('buckets by day', () => {
+    const grouped = groupOccurrencesByDate(expandWeek(term, entries, [], 9))
+    expect(grouped.get('2026-11-02')).toHaveLength(1)
+    expect(grouped.get('2026-11-04')).toHaveLength(1)
+    expect(grouped.get('2026-11-03')).toHaveLength(1)
+  })
+})
