@@ -218,6 +218,25 @@ export function SettingsView() {
           </Section>
 
           <Section
+            title="Credits"
+            description="Standing on other people's work."
+          >
+            <p className="text-[0.78rem] leading-relaxed text-ink-60">
+              Typeface: Virgil by Ellinor Rapp, under the{' '}
+              <a
+                href="/licenses/virgil-OFL.md"
+                target="_blank"
+                rel="noreferrer"
+                className="text-sky-pen underline underline-offset-2"
+              >
+                SIL Open Font License 1.1
+              </a>
+              . Interface font: Inter (OFL). Built with React, Vite, Tailwind,
+              shadcn/ui, dnd-kit and Zustand.
+            </p>
+          </Section>
+
+          <Section
             title="Data"
             description="Everything is stored in this browser only. Nothing leaves the device."
           >
