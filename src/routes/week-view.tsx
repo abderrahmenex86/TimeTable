@@ -11,9 +11,15 @@ import {
 } from '@dnd-kit/core'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { DayAgenda } from '@/components/day-agenda/day-agenda'
 import { TaskForm } from '@/components/task-panel/task-form'
 import { TaskPanel } from '@/components/task-panel/task-panel'
 import { Button } from '@/components/ui/button'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+} from '@/components/ui/drawer'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +34,7 @@ import { WeekGrid, type DropPreview } from '@/components/week-grid/week-grid'
 import { formatDayMonth } from '@/domain/dates'
 import { describeConflict, findConflict } from '@/domain/conflicts'
 import { DEFAULT_DAY_WINDOW } from '@/domain/free-time'
+import { countOpen } from '@/domain/tasks'
 import { formatClock, snapMinute } from '@/domain/time'
 import type { DateKey, Task, TimetableEntry } from '@/domain/types'
 import { createId } from '@/lib/id'
@@ -94,6 +101,7 @@ export function WeekView() {
 
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [preview, setPreview] = useState<DropPreview | null>(null)
+  const [tasksOpen, setTasksOpen] = useState(false)
 
   // Mouse only. On touch, dragging a card would fight with scrolling the panel,
   // and the "find the next free slot" button covers the same job better.
@@ -263,11 +271,27 @@ export function WeekView() {
         }}
       >
         <div className="flex min-h-0 flex-1">
-          <WeekGrid onSelectEntry={openEntry} preview={preview} />
+          <div className="hidden min-h-0 flex-1 md:flex">
+            <WeekGrid onSelectEntry={openEntry} preview={preview} />
 
-          <aside className="hidden w-[320px] shrink-0 border-l border-rule bg-paper-sunk/40 lg:block">
-            <TaskPanel onCreate={openNewTask} onEdit={openTask} />
-          </aside>
+            <aside className="hidden w-[320px] shrink-0 border-l border-rule bg-paper-sunk/40 lg:block">
+              <TaskPanel onCreate={openNewTask} onEdit={openTask} />
+            </aside>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col md:hidden">
+            <DayAgenda onSelectEntry={openEntry} />
+
+            <div className="shrink-0 border-t border-rule bg-paper px-3 py-2">
+              <Button
+                variant="outline"
+                className="w-full font-hand"
+                onClick={() => setTasksOpen(true)}
+              >
+                Tasks · {countOpen(tasks)}
+              </Button>
+            </div>
+          </div>
         </div>
 
         <DragOverlay dropAnimation={null}>
@@ -288,6 +312,15 @@ export function WeekView() {
         task={editingTask}
         subjects={subjects}
       />
+
+      <Drawer open={tasksOpen} onOpenChange={setTasksOpen}>
+        <DrawerContent className="h-[85dvh]">
+          <DrawerTitle className="sr-only">Tasks</DrawerTitle>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TaskPanel onCreate={openNewTask} onEdit={openTask} />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <EntryForm
         open={entryOpen}
