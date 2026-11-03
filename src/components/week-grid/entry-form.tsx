@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
 import { createId } from '@/lib/id'
 import { cn } from '@/lib/utils'
 import { useTimetable } from '@/store/timetable-store'
+import { useUndoable } from '@/store/undo'
 
 const NEW_SUBJECT = '__new__'
 
@@ -85,15 +86,10 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
   const updateEntry = useTimetable((state) => state.updateEntry)
   const deleteEntry = useTimetable((state) => state.deleteEntry)
   const addSubject = useTimetable((state) => state.addSubject)
+  const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(entry))
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!open) return
-    setForm(initialState(entry))
-    setError(null)
-  }, [open, entry])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
@@ -328,7 +324,7 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
                 size="sm"
                 className="mr-auto font-hand"
                 onClick={() => {
-                  deleteEntry(entry.id)
+                  run('Session deleted', () => deleteEntry(entry.id))
                   onOpenChange(false)
                 }}
               >

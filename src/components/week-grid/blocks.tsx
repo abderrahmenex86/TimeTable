@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { X } from 'lucide-react'
 import { formatClock } from '@/domain/time'
 import type {
   Interval,
@@ -124,6 +125,7 @@ type StudyBlockProps = BlockProps & {
   block: TaskBlock
   task: Task
   color?: SubjectColor
+  onRemove?: () => void
 }
 
 /**
@@ -137,13 +139,14 @@ export function StudyBlock({
   lane,
   lanes,
   window,
+  onRemove,
 }: StudyBlockProps) {
   const height = heightFor(block.start, block.end) - 2
   const showMeta = height >= 40
 
   return (
     <article
-      className="absolute overflow-hidden border-[1.5px] border-dashed px-1.5 py-1"
+      className="group absolute overflow-hidden border-[1.5px] border-dashed px-1.5 py-1"
       style={{
         ...blockStyle({
           start: block.start,
@@ -175,6 +178,17 @@ export function StudyBlock({
         >
           task &middot; {formatClock(block.start)}
         </p>
+      ) : null}
+
+      {onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${task.title} session`}
+          className="absolute top-0.5 right-0.5 z-10 rounded-[4px] p-0.5 text-current opacity-0 transition-opacity hover:bg-paper-raised/70 focus-visible:opacity-100 group-hover:opacity-100"
+        >
+          <X className="size-3" />
+        </button>
       ) : null}
     </article>
   )

@@ -9,7 +9,7 @@ import {
   type DragMoveEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreHorizontal, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { DayAgenda } from '@/components/day-agenda/day-agenda'
 import { TaskForm } from '@/components/task-panel/task-form'
@@ -41,6 +41,7 @@ import { createId } from '@/lib/id'
 import { useOccurrences, useWeek } from '@/store/hooks'
 import { suggestedBlockMinutes } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
+import { useUndoable } from '@/store/undo'
 
 const WINDOW = DEFAULT_DAY_WINDOW
 const SNAP_MINUTES = 15
@@ -91,6 +92,11 @@ export function WeekView() {
   const tasks = useTimetable((state) => state.tasks)
   const blocks = useTimetable((state) => state.blocks)
   const addBlock = useTimetable((state) => state.addBlock)
+  const deleteBlock = useTimetable((state) => state.deleteBlock)
+  const resetToDemo = useTimetable((state) => state.resetToDemo)
+  const clearAll = useTimetable((state) => state.clearAll)
+
+  const run = useUndoable()
 
   const weekOccurrences = useOccurrences(dates[0], dates[6])
 
@@ -194,7 +200,7 @@ export function WeekView() {
   const atEnd = weekIndex >= term.weekCount
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-paper">
+    <div className="app-shell flex h-dvh flex-col overflow-hidden bg-paper">
       <header className="flex shrink-0 flex-wrap items-end justify-between gap-4 border-b border-rule px-5 pt-6 pb-3 sm:px-8">
         <div>
           <h1 className="font-hand text-[1.6rem] leading-none">{term.name}</h1>
@@ -203,7 +209,7 @@ export function WeekView() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="no-print flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -257,6 +263,31 @@ export function WeekView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="More actions"
+              >
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                onSelect={() => run('Demo data restored', resetToDemo)}
+              >
+                Reset demo data
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-rose-pen"
+                onSelect={() => run('Everything cleared', clearAll)}
+              >
+                Clear all data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -272,9 +303,15 @@ export function WeekView() {
       >
         <div className="flex min-h-0 flex-1">
           <div className="hidden min-h-0 flex-1 md:flex">
-            <WeekGrid onSelectEntry={openEntry} preview={preview} />
+            <WeekGrid
+              onSelectEntry={openEntry}
+              onRemoveBlock={(blockId) =>
+                run('Session removed', () => deleteBlock(blockId))
+              }
+              preview={preview}
+            />
 
-            <aside className="hidden w-[320px] shrink-0 border-l border-rule bg-paper-sunk/40 lg:block">
+            <aside className="no-print hidden w-[320px] shrink-0 border-l border-rule bg-paper-sunk/40 lg:block">
               <TaskPanel onCreate={openNewTask} onEdit={openTask} />
             </aside>
           </div>
@@ -282,7 +319,7 @@ export function WeekView() {
           <div className="flex min-h-0 flex-1 flex-col md:hidden">
             <DayAgenda onSelectEntry={openEntry} />
 
-            <div className="shrink-0 border-t border-rule bg-paper px-3 py-2">
+            <div className="no-print shrink-0 border-t border-rule bg-paper px-3 py-2">
               <Button
                 variant="outline"
                 className="w-full font-hand"
@@ -306,12 +343,16 @@ export function WeekView() {
         </DragOverlay>
       </DndContext>
 
-      <TaskForm
-        open={taskOpen}
-        onOpenChange={setTaskOpen}
-        task={editingTask}
-        subjects={subjects}
-      />
+      {/* Mounted only while open, so the fields initialise from the task being
+          edited without an effect to reset them. */}
+      {taskOpen ? (
+        <TaskForm
+          open
+          onOpenChange={setTaskOpen}
+          task={editingTask}
+          subjects={subjects}
+        />
+      ) : null}
 
       <Drawer open={tasksOpen} onOpenChange={setTasksOpen}>
         <DrawerContent className="h-[85dvh]">
@@ -322,12 +363,14 @@ export function WeekView() {
         </DrawerContent>
       </Drawer>
 
-      <EntryForm
-        open={entryOpen}
-        onOpenChange={setEntryOpen}
-        entry={editingEntry}
-        subjects={subjects}
-      />
+      {entryOpen ? (
+        <EntryForm
+          open
+          onOpenChange={setEntryOpen}
+          entry={editingEntry}
+          subjects={subjects}
+        />
+      ) : null}
     </div>
   )
 }

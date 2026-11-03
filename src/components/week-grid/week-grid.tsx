@@ -34,9 +34,11 @@ type DayLayout = { date: DateKey; items: LaidOut<DayItem>[] }
 
 export function WeekGrid({
   onSelectEntry,
+  onRemoveBlock,
   preview,
 }: {
   onSelectEntry?: (entryId: string) => void
+  onRemoveBlock?: (blockId: string) => void
   preview?: DropPreview | null
 }) {
   const { dates, occurrences } = useWeek()
@@ -120,7 +122,7 @@ export function WeekGrid({
   }px, var(--color-rule-soft) ${HOUR_HEIGHT - 1}px ${HOUR_HEIGHT}px)`
 
   return (
-    <div className="flex-1 overflow-auto overscroll-contain">
+    <div className="app-scroll flex-1 overflow-auto overscroll-contain">
       <div className="min-w-[740px]">
         <div
           className={cn(
@@ -148,6 +150,7 @@ export function WeekGrid({
               freeGaps={freeByDate.get(date) ?? []}
               preview={preview}
               onSelectEntry={onSelectEntry}
+              onRemoveBlock={onRemoveBlock}
             />
           ))}
         </div>
@@ -165,6 +168,7 @@ type DayColumnProps = {
   freeGaps: Interval[]
   preview?: DropPreview | null
   onSelectEntry?: (entryId: string) => void
+  onRemoveBlock?: (blockId: string) => void
 }
 
 function DayColumn({
@@ -176,6 +180,7 @@ function DayColumn({
   freeGaps,
   preview,
   onSelectEntry,
+  onRemoveBlock,
 }: DayColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: date, data: { date } })
   const ghost = preview?.date === date ? preview : null
@@ -217,6 +222,9 @@ function DayColumn({
             lane={lane}
             lanes={lanes}
             window={WINDOW}
+            onRemove={
+              onRemoveBlock ? () => onRemoveBlock(item.block.id) : undefined
+            }
           />
         ),
       )}

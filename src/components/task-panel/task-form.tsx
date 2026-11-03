@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { normalizeEstimate } from '@/domain/tasks'
 import type { Priority, Subject, Task } from '@/domain/types'
 import { createId } from '@/lib/id'
 import { useTimetable } from '@/store/timetable-store'
+import { useUndoable } from '@/store/undo'
 
 const NO_SUBJECT = 'none'
 
@@ -78,16 +79,10 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
   const addTask = useTimetable((state) => state.addTask)
   const updateTask = useTimetable((state) => state.updateTask)
   const deleteTask = useTimetable((state) => state.deleteTask)
+  const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(task))
   const [showErrors, setShowErrors] = useState(false)
-
-  // Re-seed the fields each time the dialog opens, rather than on every render.
-  useEffect(() => {
-    if (!open) return
-    setForm(initialState(task))
-    setShowErrors(false)
-  }, [open, task])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
@@ -258,7 +253,7 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
                 size="sm"
                 className="mr-auto font-hand"
                 onClick={() => {
-                  deleteTask(task.id)
+                  run('Task deleted', () => deleteTask(task.id))
                   onOpenChange(false)
                 }}
               >

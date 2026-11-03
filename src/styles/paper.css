@@ -174,6 +174,96 @@ body {
   box-shadow: 0 -4px 0 var(--color-ink-15);
 }
 
+/* Sonner's own rules are `[data-sonner-toast][data-styled=true]`, so matching
+   that specificity is the only way to restyle it. */
+[data-sonner-toast][data-styled='true'] {
+  border: 1.5px solid var(--color-ink) !important;
+  border-radius: 10px 3px 11px 4px / 4px 11px 3px 10px !important;
+  background-color: var(--color-paper-raised) !important;
+  color: var(--color-ink) !important;
+  box-shadow: 3px 4px 0 var(--color-ink-15) !important;
+  font-family: var(--font-sans) !important;
+  padding: 12px 14px !important;
+}
+
+[data-sonner-toast][data-styled='true'] [data-title] {
+  font-size: 0.82rem !important;
+}
+
+[data-sonner-toast][data-styled='true'] [data-button] {
+  border: 1.5px solid var(--color-sky-pen) !important;
+  border-radius: 7px 2px 8px 3px / 3px 8px 2px 7px !important;
+  background-color: var(--color-sky-fill) !important;
+  color: var(--color-sky-pen) !important;
+  font-family: var(--font-hand) !important;
+  font-size: 0.8rem !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  margin-left: 12px !important;
+}
+
+[data-sonner-toast][data-styled='true'] [data-button]:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--color-sky-fill) 82%,
+    var(--color-sky-pen) 8%
+  ) !important;
+}
+
+[data-sonner-toast][data-styled='true'] [data-icon] {
+  color: var(--color-ink-60) !important;
+}
+
+/* ------------------------------------------------------------------ print --- */
+
+/*
+ * A timetable is a thing people still pin to a wall. The shell is a
+ * fixed-height flex column on screen; on paper it has to flow, and the task
+ * panel and controls have no business being there.
+ */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #fff;
+    background-image: none;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .app-shell {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .app-shell .sticky {
+    position: static !important;
+  }
+
+  .app-scroll {
+    overflow: visible !important;
+  }
+
+  .app-scroll > div {
+    min-width: 0 !important;
+  }
+
+  .app-shell header {
+    border-bottom: 1.5px solid var(--color-ink);
+  }
+}
+
 /* ------------------------------------------------------------------ motion --- */
 
 @media (prefers-reduced-motion: reduce) {

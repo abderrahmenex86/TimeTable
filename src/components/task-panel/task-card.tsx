@@ -15,6 +15,7 @@ import { DEADLINE_TONE_CLASS, describeDeadline } from '@/lib/deadline'
 import { cn } from '@/lib/utils'
 import { useScheduling } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
+import { useUndoable } from '@/store/undo'
 import { EffortBar } from './effort-bar'
 
 type TaskCardProps = {
@@ -28,6 +29,7 @@ type TaskCardProps = {
 export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) {
   const toggleTask = useTimetable((state) => state.toggleTask)
   const { placeInNextSlot } = useScheduling()
+  const run = useUndoable()
 
   // Only the pointer listeners are attached. Spreading dnd-kit's `attributes`
   // would put role="button" on a container that already holds real buttons.
@@ -67,7 +69,11 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
       >
         <Checkbox
           checked={done}
-          onCheckedChange={() => toggleTask(task.id)}
+          onCheckedChange={() =>
+            run(done ? 'Task reopened' : 'Task completed', () =>
+              toggleTask(task.id),
+            )
+          }
           aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
           className="mt-[3px] shrink-0"
         />
