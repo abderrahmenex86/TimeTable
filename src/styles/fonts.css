@@ -1,0 +1,20 @@
+/*
+ * Handwriting face.
+ *
+ * Virgil is the font Excalidraw uses for canvas text (not for its own UI — it
+ * ships Assistant for that). We follow the same split: see --font-hand vs
+ * --font-sans in index.css.
+ *
+ * Sourced from @excalidraw/excalidraw/dist/prod/fonts/Virgil/Virgil-Regular.woff2.
+ * See ASSETS.md before shipping this publicly: the font file carries its own
+ * terms, separate from Excalidraw's MIT-licensed code.
+ *
+ * To swap: replace the src, and the single --font-hand variable in index.css.
+ */
+@font-face {
+  font-family: 'Virgil';
+  src: url('../assets/fonts/virgil.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,1 +1,147 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/inter';
+@import './styles/fonts.css';
+@import './styles/paper.css';
+
+/*
+ * This app is paper. Keeping this variant scoped to a .dark class — which we
+ * never set — makes every `dark:` utility in the shadcn sources inert, instead
+ * of letting Tailwind's default media-query dark variant fire on a system
+ * dark-mode preference.
+ */
+@custom-variant dark (&:is(.dark *));
+
+/* ================================================================ tokens === */
+
+@theme {
+  /* --- paper & ink ------------------------------------------------------ */
+  --color-paper: #faf7f0;
+  --color-paper-sunk: #f3eee3;
+  --color-paper-raised: #fffdf9;
+  --color-ink: #1c1b19;
+  --color-ink-70: #3a3833;
+  --color-ink-60: #5c5852;
+  --color-ink-40: #8a857c;
+  --color-ink-30: #a9a398;
+  --color-ink-15: #1c1b1926;
+  --color-rule: #e0d9cb;
+  --color-rule-soft: #eae4d7;
+
+  /* --- subject pastels ---------------------------------------------------
+     Each subject is a pair: a pastel fill for the block body, and a "pen"
+     tone that carries text and the accent bar. Every pen clears 4.5:1 on its
+     own fill, so subject colour never has to be the only signal.            */
+  --color-rose-fill: #fbe0de;
+  --color-rose-pen: #a34a3c;
+  --color-sage-fill: #deebdc;
+  --color-sage-pen: #4e6b4a;
+  --color-sky-fill: #dce8f2;
+  --color-sky-pen: #3f5f79;
+  --color-butter-fill: #f8eeda;
+  --color-butter-pen: #8a6a32;
+  --color-lilac-fill: #e8e1f2;
+  --color-lilac-pen: #665282;
+  --color-mint-fill: #dcefe8;
+  --color-mint-pen: #3f6e5f;
+
+  /* --- type -------------------------------------------------------------
+     Virgil carries voice (titles, labels, block text). Inter carries speed
+     (numerals, metadata, long-form input). See notes in README.            */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-hand: 'Virgil', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+
+  /* --- motion ----------------------------------------------------------- */
+  --ease-pen: cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+
+/* =================================================== shadcn ui mapping === */
+
+@theme inline {
+  --font-heading: var(--font-hand);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+:root {
+  color-scheme: light;
+
+  --radius: 0.7rem;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+
+  --card: var(--color-paper-raised);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper-raised);
+  --popover-foreground: var(--color-ink);
+
+  /* Primary action is a pastel with a pen-coloured outline and text — never
+     white on pastel, which would fail contrast and read as muddy. */
+  --primary: var(--color-sky-fill);
+  --primary-foreground: var(--color-sky-pen);
+
+  --secondary: var(--color-paper-sunk);
+  --secondary-foreground: var(--color-ink-70);
+
+  --muted: var(--color-paper-sunk);
+  --muted-foreground: var(--color-ink-60);
+
+  --accent: #ece5d8;
+  --accent-foreground: var(--color-ink);
+
+  --destructive: var(--color-rose-pen);
+
+  --border: var(--color-rule);
+  --input: var(--color-rule);
+  --ring: color-mix(in srgb, var(--color-sky-pen) 55%, transparent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading text-ink;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  /* Numbers that get compared vertically — times, counts, durations — must
+     not reflow when they change. */
+  time,
+  [data-num] {
+    font-variant-numeric: tabular-nums;
+  }
+}
