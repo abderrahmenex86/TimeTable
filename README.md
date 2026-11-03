@@ -35,8 +35,12 @@ however much of it is already on the calendar.
 - **Task panel** grouped by urgency, with a segmented bar showing how much of
   each task's estimate is already placed.
 - **Free time** as a toggle: the gaps get hatched, with a duration in each.
-- **Drag** a task onto the grid to book a session; conflicting drops are
-  refused and name what they would overlap.
+- **Drag** a task onto the grid to book a session. The block is sized to the
+  work the task has left, shortened to whatever gap you drop into, so a
+  four-hour task dropped into a one-hour hole books an hour. Conflicting drops
+  are refused and name what they would overlap.
+- **Subjects** can be renamed and recoloured from the task panel; the change
+  applies to every session using them.
 - **Find a slot**: every task has a button that places it in the earliest gap
   before its deadline. This is also the keyboard and touch path — dragging is
   mouse-only on purpose.

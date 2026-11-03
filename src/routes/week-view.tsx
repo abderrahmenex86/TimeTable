@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner'
 import { TopBar } from '@/components/shell/top-bar'
 import { TaskForm } from '@/components/task-panel/task-form'
+import { SubjectsDialog } from '@/components/task-panel/subjects-dialog'
 import { TaskPanel } from '@/components/task-panel/task-panel'
 import {
   Drawer,
@@ -24,11 +25,12 @@ import { WeekGrid, type DropPreview } from '@/components/week-grid/week-grid'
 import { DayAgenda } from '@/components/day-agenda/day-agenda'
 import { formatDayMonth } from '@/domain/dates'
 import { describeConflict, findConflict } from '@/domain/conflicts'
+import { busyIntervals } from '@/domain/free-time'
 import { formatClock, snapMinute } from '@/domain/time'
 import type { DateKey, Interval, Task, TimetableEntry } from '@/domain/types'
 import { createId } from '@/lib/id'
 import { useDayWindow, useOccurrences, useTimeFormat, useWeek } from '@/store/hooks'
-import { suggestedBlockMinutes } from '@/store/scheduling'
+import { desiredBlockMinutes } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
@@ -40,15 +42,17 @@ type TargetArgs = {
   date: string | undefined
   clientY: number | null
   deltaY: number
-  minutes: number
+  /** Minutes of work still unplaced on the task. */
+  wanted: number
+  busyFor: (date: DateKey) => Interval[]
 }
 
 /**
  * Pointer position → a slot on the grid.
  *
- * The column's top edge is the window start, so a vertical offset converts
- * straight to minutes; the block keeps its full length and slides up rather
- * than being clipped at the bottom of the day.
+ * The block starts where you point and is as long as the work still needs,
+ * shortened to the free gap you dropped into — so a 4-hour task dropped into a
+ * 1-hour hole books an hour instead of running through the next class.
  */
 function targetFor({
   window,
@@ -56,16 +60,25 @@ function targetFor({
   date,
   clientY,
   deltaY,
-  minutes,
+  wanted,
+  busyFor,
 }: TargetArgs): DropPreview | null {
   if (overRectTop === null || clientY === null || !date) return null
 
   const offsetY = clientY + deltaY - overRectTop
-  const duration = Math.min(minutes, window.end - window.start)
   const raw = snapMinute(minuteForOffset(offsetY, window), SNAP_MINUTES)
-  const start = Math.max(window.start, Math.min(raw, window.end - duration))
+  const start = Math.max(window.start, Math.min(raw, window.end - 15))
 
-  return { date, start, end: start + duration }
+  const nextBusy = busyFor(date)
+    .filter((interval) => interval.end > start)
+    .sort((a, b) => a.start - b.start)[0]
+  const boundary = nextBusy ? Math.min(nextBusy.start, window.end) : window.end
+  const span = Math.max(0, boundary - start)
+
+  // Round down so the block never crosses into the next commitment.
+  const duration = Math.max(15, Math.floor(Math.min(wanted, span) / 15) * 15)
+
+  return { date, start, end: Math.min(start + duration, window.end) }
 }
 
 export function WeekView() {
@@ -90,6 +103,7 @@ export function WeekView() {
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [preview, setPreview] = useState<DropPreview | null>(null)
   const [tasksOpen, setTasksOpen] = useState(false)
+  const [subjectsOpen, setSubjectsOpen] = useState(false)
 
   // Mouse only. On touch, dragging a card would fight with scrolling the panel,
   // and the "find the next free slot" button covers the same job better.
@@ -133,7 +147,8 @@ export function WeekView() {
         date: (event.over?.data.current as { date?: DateKey } | undefined)?.date,
         clientY: (event.activatorEvent as PointerEvent).clientY ?? null,
         deltaY: event.delta.y,
-        minutes: suggestedBlockMinutes(task, blocks),
+        wanted: desiredBlockMinutes(task, blocks),
+        busyFor: (day) => busyIntervals(day, weekOccurrences, blocks),
       }),
     )
   }
@@ -158,7 +173,8 @@ export function WeekView() {
       date: (event.over?.data.current as { date?: DateKey } | undefined)?.date,
       clientY: (event.activatorEvent as PointerEvent).clientY ?? null,
       deltaY: event.delta.y,
-      minutes: suggestedBlockMinutes(task, blocks),
+      wanted: desiredBlockMinutes(task, blocks),
+      busyFor: (day) => busyIntervals(day, weekOccurrences, blocks),
     })
     if (!target) return
 
@@ -229,7 +245,11 @@ export function WeekView() {
             </section>
 
             <aside className="no-print hidden w-[340px] shrink-0 flex-col overflow-hidden rounded-2xl border border-rule bg-paper-raised lg:flex">
-              <TaskPanel onCreate={openNewTask} onEdit={openTask} />
+              <TaskPanel
+                onCreate={openNewTask}
+                onEdit={openTask}
+                onManageSubjects={() => setSubjectsOpen(true)}
+              />
             </aside>
           </div>
 
@@ -266,11 +286,19 @@ export function WeekView() {
         />
       ) : null}
 
+      {subjectsOpen ? (
+        <SubjectsDialog open onOpenChange={setSubjectsOpen} />
+      ) : null}
+
       <Drawer open={tasksOpen} onOpenChange={setTasksOpen}>
         <DrawerContent className="h-[85dvh]">
           <DrawerTitle className="sr-only">Tasks</DrawerTitle>
           <div className="min-h-0 flex-1 overflow-hidden">
-            <TaskPanel onCreate={openNewTask} onEdit={openTask} />
+            <TaskPanel
+                onCreate={openNewTask}
+                onEdit={openTask}
+                onManageSubjects={() => setSubjectsOpen(true)}
+              />
           </div>
         </DrawerContent>
       </Drawer>

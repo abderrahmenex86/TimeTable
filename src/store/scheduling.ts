@@ -15,16 +15,19 @@ import { useTimetable } from './timetable-store'
  * pointer — which is what makes the app usable on a phone and from a keyboard.
  */
 
-/** Longest default session. Anything bigger gets split across days. */
-const MAX_BLOCK_MINUTES = 90
 const MIN_BLOCK_MINUTES = 15
 const SEARCH_HORIZON_DAYS = 14
 
-export function suggestedBlockMinutes(task: Task, blocks: TaskBlock[]): number {
+/**
+ * How long a session should be if nothing is in the way: all of the work that
+ * is still unplaced, snapped up to a quarter hour. The drop handler shortens it
+ * to fit the gap you actually drop into.
+ */
+export function desiredBlockMinutes(task: Task, blocks: TaskBlock[]): number {
   const remaining = remainingMinutes(task, blocks)
   const basis = remaining > 0 ? remaining : normalizeEstimate(task.estimateMinutes)
   const snapped = Math.ceil(basis / 15) * 15
-  return Math.min(MAX_BLOCK_MINUTES, Math.max(MIN_BLOCK_MINUTES, snapped))
+  return Math.max(MIN_BLOCK_MINUTES, snapped)
 }
 
 export function useScheduling() {
@@ -46,21 +49,29 @@ export function useScheduling() {
       const occurrences = expandRange(term, entries, exceptions, today, end)
       const schedules = buildSchedules(today, end, occurrences, blocks, window)
 
-      const duration = suggestedBlockMinutes(task, blocks)
-      const slot = earliestFit(duration, schedules, {
-        date: today,
-        minute: nowMinute(),
-      })
-      if (!slot) return null
+      // Take the largest chunk that fits somewhere, stepping down so a 4-hour
+      // task still gets placed when only 45 minutes are free.
+      let duration = desiredBlockMinutes(task, blocks)
 
-      addBlock({
-        id: createId('block'),
-        taskId: task.id,
-        date: slot.date,
-        start: slot.start,
-        end: slot.end,
-      })
-      return slot
+      while (duration >= MIN_BLOCK_MINUTES) {
+        const slot = earliestFit(duration, schedules, {
+          date: today,
+          minute: nowMinute(),
+        })
+        if (slot) {
+          addBlock({
+            id: createId('block'),
+            taskId: task.id,
+            date: slot.date,
+            start: slot.start,
+            end: slot.end,
+          })
+          return slot
+        }
+        duration -= 15
+      }
+
+      return null
     },
     [term, entries, exceptions, blocks, addBlock, window],
   )

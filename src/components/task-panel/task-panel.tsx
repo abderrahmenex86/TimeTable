@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { FiPlus } from 'react-icons/fi'
+import { FiPlus, FiSliders } from 'react-icons/fi'
 import { Button } from '@/components/ui/button'
 import { endOfWeek, nowMinute, todayKey } from '@/domain/dates'
 import { countOpen, groupTasks } from '@/domain/tasks'
@@ -10,6 +10,7 @@ import { TaskCard } from './task-card'
 type TaskPanelProps = {
   onCreate: () => void
   onEdit: (task: Task) => void
+  onManageSubjects: () => void
 }
 
 /**
@@ -19,7 +20,11 @@ type TaskPanelProps = {
  * needs attention", and the week grid already answers "what is Linear Algebra".
  * Rendered inside the task card on desktop and inside a drawer on phones.
  */
-export function TaskPanel({ onCreate, onEdit }: TaskPanelProps) {
+export function TaskPanel({
+  onCreate,
+  onEdit,
+  onManageSubjects,
+}: TaskPanelProps) {
   const tasks = useTimetable((state) => state.tasks)
   const blocks = useTimetable((state) => state.blocks)
   const subjects = useTimetable((state) => state.subjects)
@@ -99,6 +104,17 @@ export function TaskPanel({ onCreate, onEdit }: TaskPanelProps) {
             </section>
           ))
         )}
+      </div>
+
+      <div className="shrink-0 border-t border-rule p-2">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onManageSubjects}
+        >
+          <FiSliders data-icon="inline-start" />
+          Subjects
+        </Button>
       </div>
     </div>
   )

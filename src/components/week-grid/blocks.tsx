@@ -111,7 +111,8 @@ export function EntryBlock({
           className="mt-0.5 text-[0.62rem] leading-tight tabular-nums opacity-75"
           data-num
         >
-          {formatClock(occurrence.start, timeFormat)}
+          {formatClock(occurrence.start, timeFormat)}–
+          {formatClock(occurrence.end, timeFormat)}
         </p>
       ) : null}
       {showLocation ? (
@@ -179,7 +180,8 @@ export function StudyBlock({
           className="mt-0.5 text-[0.58rem] leading-tight uppercase tracking-[0.12em] opacity-60"
           data-num
         >
-          task &middot; {formatClock(block.start, timeFormat)}
+          task &middot; {formatClock(block.start, timeFormat)}–
+          {formatClock(block.end, timeFormat)}
         </p>
       ) : null}
 
