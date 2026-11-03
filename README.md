@@ -30,7 +30,7 @@ however much of it is already on the calendar.
 ## What it does
 
 - **Week grid** with recurring sessions (every week, odd weeks or even weeks),
-  one-off sessions pinned to a single date, and term week ranges.
+  dated sessions on one or more specific dates, and term week ranges.
 - **Task panel** grouped by urgency, with a segmented bar showing how much of
   each task's estimate is already placed.
 - **Free time** as a toggle: the gaps get hatched, with a duration in each.
@@ -42,8 +42,8 @@ however much of it is already on the calendar.
 - **Calendar lock**: with the lock on, tasks cannot be dragged onto the grid at
   all, which is what you want when you are just reading the week.
 - **Light and dark** themes that follow the paper metaphor in both directions.
-- **Settings** for the first day of the week (Monday through Sunday), the theme,
-  the lock, and the stored data.
+- **Settings** for the first day of the week, 12- or 24-hour times, the hours
+  the grid covers, the theme, the lock, and the stored data.
 - **Undo** on every destructive action, from a single snapshot stack.
 - **Print stylesheet** that drops the chrome, keeps the colours, and puts the
   week on one page.
@@ -127,7 +127,7 @@ baseline.
 - No sync — the data belongs to one browser profile.
 - Cancelling a single session works; moving one does not (the rule would need
   a per-occurrence override).
-- A session is either weekly or one-off; there is no "every second Tuesday"
+- A session is either weekly or dated; there is no "every second Tuesday"
   rule beyond odd/even weeks.
 - Tasks do not recur.
 - Dragging is mouse-only. Touch and keyboard use "find a slot".

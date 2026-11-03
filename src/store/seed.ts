@@ -96,8 +96,8 @@ function createEntries(today: string): TimetableEntry[] {
       title: 'Open day',
       location: 'Main hall',
       recurrence: {
-        kind: 'once',
-        date: nextWeekday(today, 6),
+        kind: 'dated',
+        dates: [nextWeekday(today, 6)],
         start: 600,
         end: 780,
       },

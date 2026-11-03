@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { todayKey, weekdayOf } from '@/domain/dates'
-import { DEFAULT_DAY_WINDOW } from '@/domain/free-time'
 import { formatClock, formatDuration, formatRange } from '@/domain/time'
 import {
   WEEKDAY_LABELS,
@@ -9,11 +8,9 @@ import {
   type TaskBlock,
 } from '@/domain/types'
 import { cn } from '@/lib/utils'
-import { useWeek } from '@/store/hooks'
+import { useDayWindow, useTimeFormat, useWeek } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { subjectVars } from '@/components/week-grid/subject-style'
-
-const WINDOW = DEFAULT_DAY_WINDOW
 
 type Row =
   | { kind: 'gap'; start: number; end: number }
@@ -35,6 +32,8 @@ export function DayAgenda({
   const blocks = useTimetable((state) => state.blocks)
   const subjects = useTimetable((state) => state.subjects)
   const showFreeTime = useTimetable((state) => state.showFreeTime)
+  const window = useDayWindow()
+  const timeFormat = useTimeFormat()
 
   const [requested, setRequested] = useState(() => todayKey())
   const today = todayKey()
@@ -79,7 +78,7 @@ export function DayAgenda({
     items.sort((a, b) => a.start - b.start || a.end - b.end)
 
     const withGaps: Row[] = []
-    let cursor = WINDOW.start
+    let cursor = window.start
     for (const item of items) {
       if (item.start > cursor) {
         withGaps.push({ kind: 'gap', start: cursor, end: item.start })
@@ -87,11 +86,11 @@ export function DayAgenda({
       withGaps.push(item)
       cursor = Math.max(cursor, item.end)
     }
-    if (cursor < WINDOW.end) {
-      withGaps.push({ kind: 'gap', start: cursor, end: WINDOW.end })
+    if (cursor < window.end) {
+      withGaps.push({ kind: 'gap', start: cursor, end: window.end })
     }
     return withGaps
-  }, [selected, occurrences, blocks, tasksById])
+  }, [selected, occurrences, blocks, tasksById, window.start, window.end])
 
   // Gaps are only worth a row when the overlay is on; otherwise they contribute
   // an orphaned time label with nothing beside it.
@@ -151,7 +150,7 @@ export function DayAgenda({
               className="w-10 shrink-0 pt-2 text-right text-[0.65rem] tabular-nums text-ink-40"
               data-num
             >
-              {formatClock(row.start)}
+              {formatClock(row.start, timeFormat)}
             </div>
 
             <div className="min-w-0 flex-1 pb-1.5">
@@ -183,7 +182,7 @@ export function DayAgenda({
                     className="mt-0.5 block text-[0.64rem] opacity-70"
                     data-num
                   >
-                    {formatRange(row.start, row.end)}
+                    {formatRange(row.start, row.end, timeFormat)}
                     {row.occurrence.location ? ` · ${row.occurrence.location}` : ''}
                   </span>
                 </button>
@@ -203,7 +202,7 @@ export function DayAgenda({
                     {row.task.title}
                   </span>
                   <span className="mt-0.5 block text-[0.62rem] uppercase tracking-[0.1em] opacity-70" data-num>
-                    task · {formatRange(row.start, row.end)}
+                    task · {formatRange(row.start, row.end, timeFormat)}
                   </span>
                 </div>
               )}

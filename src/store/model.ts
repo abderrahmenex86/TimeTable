@@ -1,5 +1,6 @@
 import type {
   EntryException,
+  Minute,
   Subject,
   Task,
   TaskBlock,
@@ -8,6 +9,7 @@ import type {
   Weekday,
 } from '@/domain/types'
 import { startOfWeek } from '@/domain/dates'
+import type { TimeFormat } from '@/domain/time'
 
 export type ThemeMode = 'light' | 'dark'
 
@@ -17,12 +19,20 @@ export type Settings = {
   weekStartsOn: Weekday
   /** When locked, tasks cannot be dragged onto the calendar. */
   tasksLocked: boolean
+  timeFormat: TimeFormat
+  /** First minute shown in the grid. */
+  dayStart: Minute
+  /** Last minute shown in the grid. */
+  dayEnd: Minute
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'light',
   weekStartsOn: 1,
   tasksLocked: false,
+  timeFormat: '24h',
+  dayStart: 8 * 60,
+  dayEnd: 23 * 60,
 }
 
 /**

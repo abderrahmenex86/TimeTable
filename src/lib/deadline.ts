@@ -1,7 +1,7 @@
 import { daysBetween, formatDayMonth, weekdayOf } from '@/domain/dates'
 import type { Moment } from '@/domain/tasks'
 import { compareMoments } from '@/domain/tasks'
-import { formatClock } from '@/domain/time'
+import { formatClock, type TimeFormat } from '@/domain/time'
 import { WEEKDAY_LABELS, type Task } from '@/domain/types'
 
 export type DeadlineTone = 'overdue' | 'today' | 'soon' | 'later'
@@ -16,8 +16,8 @@ function pluralDays(count: number): string {
 }
 
 /** Suppress the clock time when it carries no information. */
-function withTime(at: number): string {
-  return at >= END_OF_DAY ? '' : ` · ${formatClock(at)}`
+function withTime(at: number, format: TimeFormat): string {
+  return at >= END_OF_DAY ? '' : ` · ${formatClock(at, format)}`
 }
 
 /**
@@ -28,6 +28,7 @@ function withTime(at: number): string {
 export function describeDeadline(
   task: Task,
   now: Moment,
+  format: TimeFormat = '24h',
 ): DeadlineDescription | null {
   if (!task.deadline) return null
 
@@ -36,15 +37,15 @@ export function describeDeadline(
   const offset = daysBetween(now.date, date)
 
   if (compareMoments(moment, now) < 0) {
-    if (offset === 0) return { label: `Overdue${withTime(at)}`, tone: 'overdue' }
+    if (offset === 0) return { label: `Overdue${withTime(at, format)}`, tone: 'overdue' }
     return { label: `${pluralDays(Math.abs(offset))} overdue`, tone: 'overdue' }
   }
 
-  if (offset === 0) return { label: `Today${withTime(at)}`, tone: 'today' }
-  if (offset === 1) return { label: `Tomorrow${withTime(at)}`, tone: 'soon' }
+  if (offset === 0) return { label: `Today${withTime(at, format)}`, tone: 'today' }
+  if (offset === 1) return { label: `Tomorrow${withTime(at, format)}`, tone: 'soon' }
   if (offset <= 6) {
     return {
-      label: `${WEEKDAY_LABELS[weekdayOf(date)]}${withTime(at)}`,
+      label: `${WEEKDAY_LABELS[weekdayOf(date)]}${withTime(at, format)}`,
       tone: 'soon',
     }
   }

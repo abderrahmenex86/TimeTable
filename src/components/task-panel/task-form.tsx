@@ -18,10 +18,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { parseClock } from '@/domain/time'
+import { DateField } from '@/components/fields/date-field'
+import { TimeField } from '@/components/fields/time-field'
 import { normalizeEstimate } from '@/domain/tasks'
-import type { Priority, Subject, Task } from '@/domain/types'
+import type { DateKey, Priority, Subject, Task } from '@/domain/types'
 import { createId } from '@/lib/id'
+import { useTimeFormat } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
@@ -33,7 +35,7 @@ const PRIORITIES: Array<{ value: Priority; label: string }> = [
   { value: 'low', label: 'Low' },
 ]
 
-/** Deadline dates default to the end of the chosen day. */
+/** A deadline with no explicit time means "by the end of that day". */
 const END_OF_DAY = 23 * 60 + 59
 
 type FormState = {
@@ -41,8 +43,8 @@ type FormState = {
   subjectId: string
   priority: Priority
   estimate: string
-  date: string
-  time: string
+  date: DateKey | ''
+  time: number
   notes: string
 }
 
@@ -53,18 +55,9 @@ function initialState(task: Task | null): FormState {
     priority: task?.priority ?? 'med',
     estimate: String(task?.estimateMinutes ?? 60),
     date: task?.deadline?.date ?? '',
-    time:
-      task?.deadline && task.deadline.at !== END_OF_DAY
-        ? formatInputTime(task.deadline.at)
-        : '',
+    time: task?.deadline?.at ?? END_OF_DAY,
     notes: task?.notes ?? '',
   }
-}
-
-function formatInputTime(minute: number): string {
-  const hours = Math.floor(minute / 60)
-  const minutes = minute % 60
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
 type TaskFormProps = {
@@ -79,6 +72,7 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
   const addTask = useTimetable((state) => state.addTask)
   const updateTask = useTimetable((state) => state.updateTask)
   const deleteTask = useTimetable((state) => state.deleteTask)
+  const timeFormat = useTimeFormat()
   const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(task))
@@ -96,20 +90,12 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
       return
     }
 
-    const deadline = form.date
-      ? {
-          date: form.date,
-          at: form.time ? (parseClock(form.time) ?? END_OF_DAY) : END_OF_DAY,
-        }
-      : undefined
-
     const fields = {
       title: form.title.trim(),
-      subjectId:
-        form.subjectId === NO_SUBJECT ? undefined : form.subjectId,
+      subjectId: form.subjectId === NO_SUBJECT ? undefined : form.subjectId,
       priority: form.priority,
       estimateMinutes: normalizeEstimate(Number(form.estimate)),
-      deadline,
+      deadline: form.date ? { date: form.date, at: form.time } : undefined,
       notes: form.notes.trim() || undefined,
     }
 
@@ -202,22 +188,21 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
           <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="task-date">Due date</Label>
-              <Input
+              <DateField
                 id="task-date"
-                type="date"
                 value={form.date}
-                onChange={(event) => set('date', event.target.value)}
+                onChange={(value) => set('date', value)}
+                placeholder="None"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="task-time">Time</Label>
-              <Input
+              <TimeField
                 id="task-time"
-                type="time"
                 value={form.time}
-                disabled={!form.date}
-                onChange={(event) => set('time', event.target.value)}
+                onChange={(minute) => set('time', minute)}
+                format={timeFormat}
               />
             </div>
 

@@ -13,6 +13,7 @@ import { formatClock } from '@/domain/time'
 import type { Subject, Task, TaskBlock } from '@/domain/types'
 import { DEADLINE_TONE_CLASS, describeDeadline } from '@/lib/deadline'
 import { cn } from '@/lib/utils'
+import { useTimeFormat } from '@/store/hooks'
 import { useScheduling } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
@@ -30,6 +31,7 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
   const toggleTask = useTimetable((state) => state.toggleTask)
   const tasksLocked = useTimetable((state) => state.settings.tasksLocked)
   const { placeInNextSlot } = useScheduling()
+  const timeFormat = useTimeFormat()
   const run = useUndoable()
 
   // Only the pointer listeners are attached. Spreading dnd-kit's `attributes`
@@ -41,7 +43,7 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
   })
 
   const done = task.status === 'done'
-  const deadline = describeDeadline(task, now)
+  const deadline = describeDeadline(task, now, timeFormat)
 
   function handlePlace() {
     const slot = placeInNextSlot(task)
@@ -52,7 +54,7 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
       return
     }
     toast.success(`Placed ${task.title}`, {
-      description: `${formatDayMonth(slot.date)} · ${formatClock(slot.start)}–${formatClock(slot.end)}`,
+      description: `${formatDayMonth(slot.date)} · ${formatClock(slot.start, timeFormat)}–${formatClock(slot.end, timeFormat)}`,
     })
   }
 

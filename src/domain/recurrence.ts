@@ -67,21 +67,23 @@ export function expandWeek(
     const { recurrence } = entry
     if (recurrence.end <= recurrence.start) continue
 
-    // A one-off carries its own date; a weekly rule has to be projected onto
-    // the days of this particular week.
-    if (recurrence.kind === 'once') {
-      if (!dates.includes(recurrence.date)) continue
-      if (cancelled.has(`${entry.id}|${recurrence.date}`)) continue
+    // A dated session carries its own dates; a weekly rule has to be projected
+    // onto the days of this particular week.
+    if (recurrence.kind === 'dated') {
+      for (const date of dates) {
+        if (!recurrence.dates.includes(date)) continue
+        if (cancelled.has(`${entry.id}|${date}`)) continue
 
-      occurrences.push({
-        entryId: entry.id,
-        subjectId: entry.subjectId,
-        title: entry.title,
-        location: entry.location,
-        date: recurrence.date,
-        start: recurrence.start,
-        end: recurrence.end,
-      })
+        occurrences.push({
+          entryId: entry.id,
+          subjectId: entry.subjectId,
+          title: entry.title,
+          location: entry.location,
+          date,
+          start: recurrence.start,
+          end: recurrence.end,
+        })
+      }
       continue
     }
 

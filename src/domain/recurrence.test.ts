@@ -216,7 +216,7 @@ describe('one-off sessions', () => {
       id: 'open-day',
       subjectId: 'personal',
       title: 'Open day',
-      recurrence: { kind: 'once', date: '2026-11-07', start: 600, end: 780 },
+      recurrence: { kind: 'dated', dates: ['2026-11-07'], start: 600, end: 780 },
     },
   ]
 
@@ -265,6 +265,47 @@ describe('one-off sessions', () => {
     const evenWeek = expandWeek(term, openDay, [], 10)
     expect(evenWeek).toEqual([])
     expect(expandWeek(term, openDay, [], 9)).toHaveLength(1)
+  })
+
+  it('supports more than one date', () => {
+    const multi: TimetableEntry[] = [
+      {
+        ...openDay[0],
+        id: 'multi',
+        recurrence: {
+          kind: 'dated',
+          dates: ['2026-11-05', '2026-11-06'],
+          start: 600,
+          end: 780,
+        },
+      },
+    ]
+    const result = expandWeek(term, multi, [], 9)
+    expect(result.map((o) => o.date)).toEqual(['2026-11-05', '2026-11-06'])
+    // Still nothing in the following week.
+    expect(expandWeek(term, multi, [], 10)).toEqual([])
+  })
+
+  it('can be cancelled on one date without losing the other', () => {
+    const multi: TimetableEntry[] = [
+      {
+        ...openDay[0],
+        id: 'multi',
+        recurrence: {
+          kind: 'dated',
+          dates: ['2026-11-05', '2026-11-06'],
+          start: 600,
+          end: 780,
+        },
+      },
+    ]
+    const result = expandWeek(
+      term,
+      multi,
+      [{ entryId: 'multi', date: '2026-11-05', kind: 'cancelled' }],
+      9,
+    )
+    expect(result.map((o) => o.date)).toEqual(['2026-11-06'])
   })
 
   it('shows up through expandRange', () => {

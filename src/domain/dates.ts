@@ -114,6 +114,26 @@ export function isSameDay(a: DateKey, b: DateKey): boolean {
   return a === b
 }
 
+/**
+ * `DateKey` ↔ `Date` for widgets that insist on `Date` (the calendar).
+ *
+ * Both directions work in local time and at local midnight, so they round-trip
+ * without drifting across a timezone boundary.
+ */
+export function dateKeyToDate(key: DateKey): Date {
+  const date = toUTC(key)
+  if (!date) return new Date(Number.NaN)
+  return new Date(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+  )
+}
+
+export function dateToDateKey(date: Date): DateKey {
+  return makeDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
+}
+
 /** Lexicographic comparison is chronological for `YYYY-MM-DD`. */
 export function compareDateKeys(a: DateKey, b: DateKey): number {
   return a < b ? -1 : a > b ? 1 : 0

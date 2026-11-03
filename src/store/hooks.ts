@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { clampWeekIndex, weekDates, weekIndexFor } from '@/domain/dates'
 import { buildSchedules } from '@/domain/free-time'
 import { expandRange, expandWeek } from '@/domain/recurrence'
-import type { DateKey, Occurrence } from '@/domain/types'
+import type { DateKey, Interval, Occurrence } from '@/domain/types'
 import { useTimetable } from './timetable-store'
 
 /**
@@ -79,4 +79,20 @@ export function useWeekOf(date: DateKey): number | null {
     const index = weekIndexFor(term, date)
     return index >= 1 && index <= term.weekCount ? index : null
   }, [term, date])
+}
+
+/** Stable settings object; changes only when a preference changes. */
+export function useSettings() {
+  return useTimetable((state) => state.settings)
+}
+
+export function useTimeFormat() {
+  return useTimetable((state) => state.settings.timeFormat)
+}
+
+/** The visible span of a day, from settings. */
+export function useDayWindow(): Interval {
+  const start = useTimetable((state) => state.settings.dayStart)
+  const end = useTimetable((state) => state.settings.dayEnd)
+  return useMemo(() => ({ start, end }), [start, end])
 }

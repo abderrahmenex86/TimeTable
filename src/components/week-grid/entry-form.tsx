@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Dialog,
   DialogContent,
@@ -17,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { todayKey } from '@/domain/dates'
-import { parseClock } from '@/domain/time'
+import { TimeField } from '@/components/fields/time-field'
+import { addDays, dateKeyToDate, dateToDateKey } from '@/domain/dates'
 import {
   SUBJECT_COLORS,
   WEEKDAYS,
@@ -32,19 +33,20 @@ import {
 } from '@/domain/types'
 import { createId } from '@/lib/id'
 import { cn } from '@/lib/utils'
+import { useTimeFormat } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
 const NEW_SUBJECT = '__new__'
 
-/** The repeat choices surfaced in the form. `once` maps to a one-off entry. */
-type RepeatChoice = WeekParity | 'once'
+/** The repeat choices surfaced in the form. `never` maps to dated sessions. */
+type RepeatChoice = WeekParity | 'never'
 
 const REPEAT_OPTIONS: Array<{ value: RepeatChoice; label: string }> = [
   { value: 'all', label: 'Every week' },
   { value: 'odd', label: 'Odd weeks' },
   { value: 'even', label: 'Even weeks' },
-  { value: 'once', label: 'Never' },
+  { value: 'never', label: 'Never' },
 ]
 
 type FormState = {
@@ -52,42 +54,35 @@ type FormState = {
   subjectId: string
   location: string
   repeat: RepeatChoice
-  /** Only meaningful when `repeat` is `once`. */
-  date: string
+  /** Only meaningful when `repeat` is `never`. */
+  dates: string[]
   days: Weekday[]
-  start: string
-  end: string
+  start: number
+  end: number
   newSubjectName: string
   newSubjectColor: SubjectColor
 }
 
 function initialState(entry: TimetableEntry | null): FormState {
   const recurrence = entry?.recurrence
-  const isOnce = recurrence?.kind === 'once'
+  const isDated = recurrence?.kind === 'dated'
 
   return {
     title: entry?.title ?? '',
     subjectId: entry?.subjectId ?? '',
     location: entry?.location ?? '',
-    repeat: isOnce
-      ? 'once'
+    repeat: isDated
+      ? 'never'
       : recurrence?.kind === 'weekly'
         ? recurrence.parity
         : 'all',
-    date: isOnce ? recurrence.date : '',
-    days:
-      recurrence?.kind === 'weekly' ? [...recurrence.days] : [],
-    start: minuteToInput(recurrence?.start ?? 9 * 60),
-    end: minuteToInput(recurrence?.end ?? 10 * 60 + 30),
+    dates: isDated ? [...recurrence.dates] : [],
+    days: recurrence?.kind === 'weekly' ? [...recurrence.days] : [],
+    start: recurrence?.start ?? 9 * 60,
+    end: recurrence?.end ?? 10 * 60 + 30,
     newSubjectName: '',
     newSubjectColor: 'sky',
   }
-}
-
-function minuteToInput(minute: number): string {
-  return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(
-    minute % 60,
-  ).padStart(2, '0')}`
 }
 
 type EntryFormProps = {
@@ -103,6 +98,8 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
   const updateEntry = useTimetable((state) => state.updateEntry)
   const deleteEntry = useTimetable((state) => state.deleteEntry)
   const addSubject = useTimetable((state) => state.addSubject)
+  const term = useTimetable((state) => state.term)
+  const timeFormat = useTimeFormat()
   const run = useUndoable()
 
   const [form, setForm] = useState<FormState>(() => initialState(entry))
@@ -110,15 +107,6 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
-
-  /** Picking "Never" seeds a date so the field is never blank. */
-  function chooseRepeat(value: RepeatChoice) {
-    setForm((current) => ({
-      ...current,
-      repeat: value,
-      date: value === 'once' && !current.date ? todayKey() : current.date,
-    }))
-  }
 
   function toggleDay(day: Weekday) {
     setForm((current) => ({
@@ -132,21 +120,22 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
 
-    const start = parseClock(form.start)
-    const end = parseClock(form.end)
-    const once = form.repeat === 'once'
+    const isNever = form.repeat === 'never'
 
     if (!form.title.trim()) return setError('Give the session a name.')
     if (!form.subjectId) return setError('Pick a subject.')
     if (form.subjectId === NEW_SUBJECT && !form.newSubjectName.trim()) {
       return setError('Name the new subject.')
     }
-    if (once && !form.date) return setError('Pick a date for this session.')
-    if (!once && form.days.length === 0) {
+    if (isNever && form.dates.length === 0) {
+      return setError('Pick at least one date, or choose a repeat.')
+    }
+    if (!isNever && form.days.length === 0) {
       return setError('Pick at least one day, or set it to never repeat.')
     }
-    if (start === null || end === null) return setError('Check the start and end times.')
-    if (end <= start) return setError('The end time has to be after the start.')
+    if (form.end <= form.start) {
+      return setError('The end time has to be after the start.')
+    }
 
     let subjectId = form.subjectId
     if (subjectId === NEW_SUBJECT) {
@@ -159,15 +148,15 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
       subjectId = subject.id
     }
 
-    const recurrence: Recurrence = once
-      ? { kind: 'once', date: form.date, start, end }
+    const recurrence: Recurrence = isNever
+      ? { kind: 'dated', dates: [...form.dates].sort(), start: form.start, end: form.end }
       : {
           kind: 'weekly',
           days: form.days,
-          start,
-          end,
-          // `once` is handled above, so this is a plain parity value.
-          parity: form.repeat === 'once' ? 'all' : form.repeat,
+          start: form.start,
+          end: form.end,
+          // `never` is handled above, so this is a plain parity value.
+          parity: form.repeat === 'never' ? 'all' : form.repeat,
         }
 
     if (entry) {
@@ -190,7 +179,11 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
     onOpenChange(false)
   }
 
-  const isOnce = form.repeat === 'once'
+  const isNever = form.repeat === 'never'
+  const termStart = dateKeyToDate(term.startDate)
+  const termEnd = dateKeyToDate(
+    addDays(term.startDate, term.weekCount * 7 - 1),
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -200,7 +193,7 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
             {entry ? 'Edit session' : 'New session'}
           </DialogTitle>
           <DialogDescription>
-            Sessions can repeat across the term, or happen just once on a date.
+            Sessions can repeat across the term, or happen on specific dates.
           </DialogDescription>
         </DialogHeader>
 
@@ -281,21 +274,21 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="entry-start">Start</Label>
-              <Input
+              <TimeField
                 id="entry-start"
-                type="time"
                 value={form.start}
-                onChange={(event) => set('start', event.target.value)}
+                onChange={(minute) => set('start', minute)}
+                format={timeFormat}
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="entry-end">End</Label>
-              <Input
+              <TimeField
                 id="entry-end"
-                type="time"
                 value={form.end}
-                onChange={(event) => set('end', event.target.value)}
+                onChange={(minute) => set('end', minute)}
+                format={timeFormat}
               />
             </div>
 
@@ -303,7 +296,7 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
               <Label htmlFor="entry-repeat">Repeats</Label>
               <Select
                 value={form.repeat}
-                onValueChange={(value) => chooseRepeat(value as RepeatChoice)}
+                onValueChange={(value) => set('repeat', value as RepeatChoice)}
               >
                 <SelectTrigger id="entry-repeat" className="w-full">
                   <SelectValue />
@@ -319,15 +312,31 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
             </div>
           </div>
 
-          {isOnce ? (
+          {isNever ? (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-date">Date</Label>
-              <Input
-                id="entry-date"
-                type="date"
-                value={form.date}
-                onChange={(event) => set('date', event.target.value)}
-              />
+              <div className="flex items-baseline justify-between">
+                <Label>Dates</Label>
+                <span className="text-[0.7rem] text-ink-40" data-num>
+                  {form.dates.length === 0
+                    ? 'none selected'
+                    : `${form.dates.length} selected`}
+                </span>
+              </div>
+              <div className="flex justify-center rounded-lg border border-rule bg-paper-sunk/40 p-1">
+                <Calendar
+                  mode="multiple"
+                  selected={form.dates.map(dateKeyToDate)}
+                  onSelect={(dates) =>
+                    set(
+                      'dates',
+                      (dates ?? []).map(dateToDateKey).sort(),
+                    )
+                  }
+                  disabled={{ before: termStart, after: termEnd }}
+                  startMonth={termStart}
+                  endMonth={termEnd}
+                />
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5">

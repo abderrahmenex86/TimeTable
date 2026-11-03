@@ -24,19 +24,18 @@ import { WeekGrid, type DropPreview } from '@/components/week-grid/week-grid'
 import { DayAgenda } from '@/components/day-agenda/day-agenda'
 import { formatDayMonth } from '@/domain/dates'
 import { describeConflict, findConflict } from '@/domain/conflicts'
-import { DEFAULT_DAY_WINDOW } from '@/domain/free-time'
 import { formatClock, snapMinute } from '@/domain/time'
-import type { DateKey, Task, TimetableEntry } from '@/domain/types'
+import type { DateKey, Interval, Task, TimetableEntry } from '@/domain/types'
 import { createId } from '@/lib/id'
-import { useOccurrences, useWeek } from '@/store/hooks'
+import { useDayWindow, useOccurrences, useTimeFormat, useWeek } from '@/store/hooks'
 import { suggestedBlockMinutes } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
-const WINDOW = DEFAULT_DAY_WINDOW
 const SNAP_MINUTES = 15
 
 type TargetArgs = {
+  window: Interval
   overRectTop: number | null
   date: string | undefined
   clientY: number | null
@@ -52,6 +51,7 @@ type TargetArgs = {
  * than being clipped at the bottom of the day.
  */
 function targetFor({
+  window,
   overRectTop,
   date,
   clientY,
@@ -61,9 +61,9 @@ function targetFor({
   if (overRectTop === null || clientY === null || !date) return null
 
   const offsetY = clientY + deltaY - overRectTop
-  const duration = Math.min(minutes, WINDOW.end - WINDOW.start)
-  const raw = snapMinute(minuteForOffset(offsetY, WINDOW), SNAP_MINUTES)
-  const start = Math.max(WINDOW.start, Math.min(raw, WINDOW.end - duration))
+  const duration = Math.min(minutes, window.end - window.start)
+  const raw = snapMinute(minuteForOffset(offsetY, window), SNAP_MINUTES)
+  const start = Math.max(window.start, Math.min(raw, window.end - duration))
 
   return { date, start, end: start + duration }
 }
@@ -77,6 +77,8 @@ export function WeekView() {
   const addBlock = useTimetable((state) => state.addBlock)
   const deleteBlock = useTimetable((state) => state.deleteBlock)
   const tasksLocked = useTimetable((state) => state.settings.tasksLocked)
+  const window = useDayWindow()
+  const timeFormat = useTimeFormat()
 
   const run = useUndoable()
   const weekOccurrences = useOccurrences(dates[0], dates[6])
@@ -126,6 +128,7 @@ export function WeekView() {
 
     setPreview(
       targetFor({
+        window,
         overRectTop: event.over?.rect.top ?? null,
         date: (event.over?.data.current as { date?: DateKey } | undefined)?.date,
         clientY: (event.activatorEvent as PointerEvent).clientY ?? null,
@@ -150,6 +153,7 @@ export function WeekView() {
     if (!task) return
 
     const target = targetFor({
+      window,
       overRectTop: event.over?.rect.top ?? null,
       date: (event.over?.data.current as { date?: DateKey } | undefined)?.date,
       clientY: (event.activatorEvent as PointerEvent).clientY ?? null,
@@ -179,7 +183,7 @@ export function WeekView() {
     })
 
     toast.success(`Placed ${task.title}`, {
-      description: `${formatDayMonth(target.date)} · ${formatClock(target.start)}–${formatClock(target.end)}`,
+      description: `${formatDayMonth(target.date)} · ${formatClock(target.start, timeFormat)}–${formatClock(target.end, timeFormat)}`,
     })
   }
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   addDays,
+  dateKeyToDate,
+  dateToDateKey,
   clampWeekIndex,
   daysBetween,
   endOfWeek,
@@ -66,6 +68,20 @@ describe('date keys', () => {
     expect(isDateKey('2026-02-31')).toBe(false)
     expect(isDateKey('2026-13-01')).toBe(false)
     expect(isDateKey('3/11/2026')).toBe(false)
+  })
+
+  it('round-trips through Date in local time', () => {
+    for (const key of ['2026-11-03', '2024-02-29', '2026-01-01', '2026-12-31']) {
+      expect(dateToDateKey(dateKeyToDate(key))).toBe(key)
+    }
+  })
+
+  it('produces local midnight, not UTC midnight', () => {
+    const date = dateKeyToDate('2026-11-03')
+    expect(date.getFullYear()).toBe(2026)
+    expect(date.getMonth()).toBe(10)
+    expect(date.getDate()).toBe(3)
+    expect(date.getHours()).toBe(0)
   })
 
   it('reads today from the local clock', () => {

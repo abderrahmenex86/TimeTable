@@ -1,8 +1,11 @@
 import { Link } from 'react-router'
 import { FiArrowLeft, FiLock, FiMoon, FiSun, FiUnlock } from 'react-icons/fi'
+import { TimeField } from '@/components/fields/time-field'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from '@/domain/types'
 import { cn } from '@/lib/utils'
+import { useTimeFormat } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { useUndoable } from '@/store/undo'
 
@@ -45,6 +48,11 @@ export function SettingsView() {
   const setWeekStartsOn = useTimetable((state) => state.setWeekStartsOn)
   const tasksLocked = useTimetable((state) => state.settings.tasksLocked)
   const toggleTaskLock = useTimetable((state) => state.toggleTaskLock)
+  const timeFormat = useTimeFormat()
+  const setTimeFormat = useTimetable((state) => state.setTimeFormat)
+  const dayStart = useTimetable((state) => state.settings.dayStart)
+  const dayEnd = useTimetable((state) => state.settings.dayEnd)
+  const setDayWindow = useTimetable((state) => state.setDayWindow)
   const resetToDemo = useTimetable((state) => state.resetToDemo)
   const clearAll = useTimetable((state) => state.clearAll)
 
@@ -94,6 +102,68 @@ export function SettingsView() {
                   </button>
                 )
               })}
+            </div>
+          </Section>
+
+          <Section
+            title="Time format"
+            description="How clock times are written everywhere in the app."
+          >
+            <div className="flex gap-2">
+              {(
+                [
+                  { value: '24h', label: '24-hour', hint: '21:30' },
+                  { value: '12h', label: '12-hour', hint: '9:30 PM' },
+                ] as const
+              ).map((option) => {
+                const active = timeFormat === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setTimeFormat(option.value)}
+                    className={cn(
+                      'flex flex-1 flex-col items-center gap-0.5 border-[1.5px] px-3 py-2 font-hand text-[0.85rem] shadow-[2px_3px_0_var(--fg-15)] transition-colors',
+                      active
+                        ? 'border-sky-pen bg-sky-fill text-sky-pen'
+                        : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
+                    )}
+                    style={{ borderRadius: '10px 3px 11px 4px / 4px 11px 3px 10px' }}
+                  >
+                    {option.label}
+                    <span className="text-[0.68rem] opacity-60" data-num>
+                      {option.hint}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </Section>
+
+          <Section
+            title="Day view"
+            description="The hours the grid shows. A narrower span gives every hour more room."
+          >
+            <div className="flex items-end gap-2">
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="day-start">First hour</Label>
+                <TimeField
+                  id="day-start"
+                  value={dayStart}
+                  onChange={(minute) => setDayWindow(minute, dayEnd)}
+                  format={timeFormat}
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label htmlFor="day-end">Last hour</Label>
+                <TimeField
+                  id="day-end"
+                  value={dayEnd}
+                  onChange={(minute) => setDayWindow(dayStart, minute)}
+                  format={timeFormat}
+                />
+              </div>
             </div>
           </Section>
 

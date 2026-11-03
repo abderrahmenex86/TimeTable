@@ -90,8 +90,9 @@ export type Recurrence =
       weeks?: WeekRange
     })
   | (RecurrenceTime & {
-      kind: 'once'
-      date: DateKey
+      kind: 'dated'
+      /** One or more specific dates. Never repeats. */
+      dates: DateKey[]
     })
 
 /** The stored rule. Never rendered directly — project it into a week first. */

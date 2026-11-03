@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { FiX } from 'react-icons/fi'
-import { formatClock } from '@/domain/time'
+import { formatClock, type TimeFormat } from '@/domain/time'
 import type {
   Interval,
   Occurrence,
@@ -24,6 +24,7 @@ type BlockProps = {
   lane: number
   lanes: number
   window: Interval
+  timeFormat: TimeFormat
 }
 
 /**
@@ -64,6 +65,7 @@ export function EntryBlock({
   lane,
   lanes,
   window,
+  timeFormat,
   onSelect,
 }: EntryBlockProps) {
   const height = heightFor(occurrence.start, occurrence.end) - 2
@@ -92,7 +94,7 @@ export function EntryBlock({
         <button
           type="button"
           onClick={onSelect}
-          aria-label={`${occurrence.title}, ${formatClock(occurrence.start)} to ${formatClock(occurrence.end)}`}
+          aria-label={`${occurrence.title}, ${formatClock(occurrence.start, timeFormat)} to ${formatClock(occurrence.end, timeFormat)}`}
           className="absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
         />
       ) : null}
@@ -109,7 +111,7 @@ export function EntryBlock({
           className="mt-0.5 text-[0.62rem] leading-tight tabular-nums opacity-75"
           data-num
         >
-          {formatClock(occurrence.start)}
+          {formatClock(occurrence.start, timeFormat)}
         </p>
       ) : null}
       {showLocation ? (
@@ -139,6 +141,7 @@ export function StudyBlock({
   lane,
   lanes,
   window,
+  timeFormat,
   onRemove,
 }: StudyBlockProps) {
   const height = heightFor(block.start, block.end) - 2
@@ -176,7 +179,7 @@ export function StudyBlock({
           className="mt-0.5 text-[0.58rem] leading-tight uppercase tracking-[0.12em] opacity-60"
           data-num
         >
-          task &middot; {formatClock(block.start)}
+          task &middot; {formatClock(block.start, timeFormat)}
         </p>
       ) : null}
 

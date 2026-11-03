@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { todayKey, weekdayOf } from '@/domain/dates'
-import { busyIntervals, DEFAULT_DAY_WINDOW } from '@/domain/free-time'
+import { busyIntervals } from '@/domain/free-time'
 import { complementIntervals } from '@/domain/intervals'
 import { layoutDay, type LaidOut } from '@/domain/layout'
-import { formatClock } from '@/domain/time'
+import { formatClock, type TimeFormat } from '@/domain/time'
 import {
   WEEKDAY_LABELS,
   type DateKey,
@@ -15,14 +15,13 @@ import {
   type TaskBlock,
 } from '@/domain/types'
 import { cn } from '@/lib/utils'
-import { useWeek } from '@/store/hooks'
+import { useDayWindow, useTimeFormat, useWeek } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 import { EntryBlock, SKETCH_RADIUS, StudyBlock } from './blocks'
 import { ClockNow } from './clock-now'
 import { FreeGaps } from './free-gaps'
 import { GRID_COLUMNS, HOUR_HEIGHT, PIXELS_PER_MINUTE, topFor } from './metrics'
 
-const WINDOW = DEFAULT_DAY_WINDOW
 
 export type DropPreview = { date: DateKey; start: number; end: number }
 
@@ -46,6 +45,8 @@ export function WeekGrid({
   const tasks = useTimetable((state) => state.tasks)
   const blocks = useTimetable((state) => state.blocks)
   const showFreeTime = useTimetable((state) => state.showFreeTime)
+  const window = useDayWindow()
+  const timeFormat = useTimeFormat()
 
   const today = todayKey()
 
@@ -90,16 +91,16 @@ export function WeekGrid({
     // Start one hour below the window top so the first label is not clipped by
     // the header, and stop before the bottom edge for the same reason.
     for (
-      let hour = Math.floor(WINDOW.start / 60) + 1;
-      hour * 60 < WINDOW.end;
+      let hour = Math.floor(window.start / 60) + 1;
+      hour * 60 < window.end;
       hour += 1
     ) {
       list.push(hour)
     }
     return list
-  }, [])
+  }, [window])
 
-  const totalHeight = (WINDOW.end - WINDOW.start) * PIXELS_PER_MINUTE
+  const totalHeight = (window.end - window.start) * PIXELS_PER_MINUTE
 
   // Free gaps are only computed while the overlay is on.
   const freeByDate = useMemo(() => {
@@ -108,11 +109,11 @@ export function WeekGrid({
     for (const date of dates) {
       map.set(
         date,
-        complementIntervals(busyIntervals(date, occurrences, blocks), WINDOW),
+        complementIntervals(busyIntervals(date, occurrences, blocks), window),
       )
     }
     return map
-  }, [showFreeTime, dates, occurrences, blocks])
+  }, [showFreeTime, dates, occurrences, blocks, window])
 
   // Hour rules live on each column's own background rather than in a shared
   // overlay, so the "today" tint and the rules can coexist without z-index
@@ -137,7 +138,7 @@ export function WeekGrid({
         </div>
 
         <div className={cn('grid', GRID_COLUMNS)} style={{ height: totalHeight }}>
-          <TimeGutter hours={hours} window={WINDOW} />
+          <TimeGutter hours={hours} window={window} timeFormat={timeFormat} />
 
           {days.map(({ date, items }) => (
             <DayColumn
@@ -148,7 +149,9 @@ export function WeekGrid({
               hourRules={hourRules}
               subjectsById={subjectsById}
               freeGaps={freeByDate.get(date) ?? []}
+              window={window}
               preview={preview}
+              timeFormat={timeFormat}
               onSelectEntry={onSelectEntry}
               onRemoveBlock={onRemoveBlock}
             />
@@ -166,6 +169,8 @@ type DayColumnProps = {
   hourRules: string
   subjectsById: Map<string, Subject>
   freeGaps: Interval[]
+  window: Interval
+  timeFormat: TimeFormat
   preview?: DropPreview | null
   onSelectEntry?: (entryId: string) => void
   onRemoveBlock?: (blockId: string) => void
@@ -178,6 +183,8 @@ function DayColumn({
   hourRules,
   subjectsById,
   freeGaps,
+  window,
+  timeFormat,
   preview,
   onSelectEntry,
   onRemoveBlock,
@@ -196,7 +203,7 @@ function DayColumn({
       )}
       style={{ backgroundImage: hourRules }}
     >
-      {freeGaps.length > 0 ? <FreeGaps gaps={freeGaps} window={WINDOW} /> : null}
+      {freeGaps.length > 0 ? <FreeGaps gaps={freeGaps} window={window} /> : null}
 
       {items.map(({ item, lane, lanes }) =>
         item.kind === 'entry' ? (
@@ -206,7 +213,8 @@ function DayColumn({
             color={subjectsById.get(item.occurrence.subjectId)?.color}
             lane={lane}
             lanes={lanes}
-            window={WINDOW}
+            window={window}
+            timeFormat={timeFormat}
             onSelect={
               onSelectEntry
                 ? () => onSelectEntry(item.occurrence.entryId)
@@ -221,7 +229,8 @@ function DayColumn({
             color={subjectsById.get(item.task.subjectId ?? '')?.color}
             lane={lane}
             lanes={lanes}
-            window={WINDOW}
+            window={window}
+            timeFormat={timeFormat}
             onRemove={
               onRemoveBlock ? () => onRemoveBlock(item.block.id) : undefined
             }
@@ -233,7 +242,7 @@ function DayColumn({
         <div
           className="pointer-events-none absolute inset-x-[2px] z-20 border-[1.5px] border-dashed border-sky-pen bg-sky-fill/60"
           style={{
-            top: topFor(ghost.start, WINDOW),
+            top: topFor(ghost.start, window),
             height: Math.max((ghost.end - ghost.start) * PIXELS_PER_MINUTE - 2, 14),
             borderRadius: SKETCH_RADIUS,
           }}
@@ -247,7 +256,7 @@ function DayColumn({
         </div>
       ) : null}
 
-      <ClockNow date={date} window={WINDOW} />
+      <ClockNow date={date} window={window} />
     </div>
   )
 }
@@ -280,9 +289,11 @@ function DayHeader({ date, isToday }: { date: DateKey; isToday: boolean }) {
 function TimeGutter({
   hours,
   window,
+  timeFormat,
 }: {
   hours: number[]
   window: Interval
+  timeFormat: TimeFormat
 }) {
   return (
     <div className="relative">
@@ -293,7 +304,7 @@ function TimeGutter({
           style={{ top: topFor(hour * 60, window) }}
           data-num
         >
-          {formatClock(hour * 60)}
+          {formatClock(hour * 60, timeFormat)}
         </span>
       ))}
     </div>

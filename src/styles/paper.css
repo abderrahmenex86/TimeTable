@@ -243,6 +243,82 @@ body {
   color: var(--fg-60) !important;
 }
 
+/* --------------------------------------------------------------- calendar --- */
+
+/*
+ * shadcn's Calendar ships generic indigo/pill styling. These overrides bring it
+ * onto the paper: hand-lettered numerals, sketched cell geometry, and the
+ * pastel selection colour already used by every other control.
+ */
+.rdp-root {
+  --rdp-accent-color: var(--sky-pen);
+  --rdp-accent-background-color: var(--sky-fill);
+  font-family: var(--font-sans);
+}
+
+.rdp-caption_label {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+}
+
+.rdp-weekday {
+  color: var(--fg-40);
+  font-size: 0.6rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.rdp-day {
+  border-radius: 7px 2px 8px 3px / 3px 8px 2px 7px;
+}
+
+.rdp-day_button {
+  border: 1.5px solid transparent;
+  border-radius: inherit;
+  font-family: var(--font-hand);
+  font-size: 0.82rem;
+}
+
+.rdp-day_button:hover {
+  border-color: var(--line);
+  background-color: var(--surface-sunk);
+}
+
+.rdp-today:not(.rdp-selected) .rdp-day_button {
+  border-color: var(--rose-pen);
+  color: var(--rose-pen);
+}
+
+.rdp-selected .rdp-day_button {
+  border-color: var(--sky-pen);
+  background-color: var(--sky-fill);
+  color: var(--sky-pen);
+}
+
+/* shadcn merges adjacent selected cells into a range pill. In multi-select each
+   date is independent, so every cell keeps its own sketched corners. */
+.rdp-day[data-selected='true'],
+.rdp-day[data-selected='true'] .rdp-day_button {
+  border-radius: 7px 2px 8px 3px / 3px 8px 2px 7px !important;
+}
+
+.rdp-outside {
+  opacity: 0.35;
+}
+
+.rdp-disabled {
+  opacity: 0.3;
+}
+
+/* Month arrows are navigation, not actions — no border, no shadow. */
+.rdp-button_previous,
+.rdp-button_next {
+  border-color: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
 /* ------------------------------------------------------------------ print --- */
 
 /*

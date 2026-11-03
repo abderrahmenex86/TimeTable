@@ -5,6 +5,7 @@ import { expandRange } from '@/domain/recurrence'
 import { normalizeEstimate, remainingMinutes } from '@/domain/tasks'
 import type { Task, TaskBlock } from '@/domain/types'
 import { createId } from '@/lib/id'
+import { useDayWindow } from './hooks'
 import { useTimetable } from './timetable-store'
 
 /**
@@ -32,6 +33,7 @@ export function useScheduling() {
   const exceptions = useTimetable((state) => state.exceptions)
   const blocks = useTimetable((state) => state.blocks)
   const addBlock = useTimetable((state) => state.addBlock)
+  const window = useDayWindow()
 
   const placeInNextSlot = useCallback(
     (task: Task): Slot | null => {
@@ -42,7 +44,7 @@ export function useScheduling() {
       const end = deadline && deadline < horizon && deadline >= today ? deadline : horizon
 
       const occurrences = expandRange(term, entries, exceptions, today, end)
-      const schedules = buildSchedules(today, end, occurrences, blocks)
+      const schedules = buildSchedules(today, end, occurrences, blocks, window)
 
       const duration = suggestedBlockMinutes(task, blocks)
       const slot = earliestFit(duration, schedules, {
@@ -60,7 +62,7 @@ export function useScheduling() {
       })
       return slot
     },
-    [term, entries, exceptions, blocks, addBlock],
+    [term, entries, exceptions, blocks, addBlock, window],
   )
 
   return { placeInNextSlot }

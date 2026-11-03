@@ -1,9 +1,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { startOfWeek, todayKey, weekIndexFor } from '@/domain/dates'
+import { MINUTES_PER_DAY, type TimeFormat } from '@/domain/time'
 import type {
   DateKey,
   EntryException,
+  Minute,
   Subject,
   Task,
   TaskBlock,
@@ -46,6 +48,8 @@ type Actions = {
   setTheme: (theme: ThemeMode) => void
   setWeekStartsOn: (weekStartsOn: Weekday) => void
   toggleTaskLock: () => void
+  setTimeFormat: (format: TimeFormat) => void
+  setDayWindow: (start: Minute, end: Minute) => void
 
   addSubject: (subject: Subject) => void
   updateSubject: (id: string, patch: Partial<Subject>) => void
@@ -142,6 +146,26 @@ export const useTimetable = create<TimetableState>()(
               tasksLocked: !state.settings.tasksLocked,
             },
           })),
+
+        setTimeFormat: (timeFormat) =>
+          set((state) => ({ settings: { ...state.settings, timeFormat } })),
+
+        /**
+         * Guards the window so the grid can never invert or collapse: at least
+         * an hour is always visible.
+         */
+        setDayWindow: (start, end) =>
+          set((state) => {
+            const dayStart = Math.min(
+              Math.max(0, Math.round(start)),
+              MINUTES_PER_DAY - 60,
+            )
+            const dayEnd = Math.min(
+              Math.max(dayStart + 60, Math.round(end)),
+              MINUTES_PER_DAY,
+            )
+            return { settings: { ...state.settings, dayStart, dayEnd } }
+          }),
 
         addSubject: (subject) =>
           set((state) => ({ subjects: [...state.subjects, subject] })),

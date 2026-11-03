@@ -20,15 +20,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { todayKey, weekdayOf } from '@/domain/dates'
 import { countOpen } from '@/domain/tasks'
 import { WEEKDAY_LABELS } from '@/domain/types'
-import { useNow, useWeek } from '@/store/hooks'
+import { nowMinute } from '@/domain/dates'
+import { formatClock } from '@/domain/time'
+import { useNow, useTimeFormat, useWeek } from '@/store/hooks'
 import { useTimetable } from '@/store/timetable-store'
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
-
-const pad = (value: number) => String(value).padStart(2, '0')
 
 /**
  * The clock is its own component so a one-second tick does not re-render the
@@ -37,6 +37,7 @@ const pad = (value: number) => String(value).padStart(2, '0')
  */
 function Clock() {
   const now = useNow(1000)
+  const timeFormat = useTimeFormat()
   const key = todayKey(now)
 
   return (
@@ -45,8 +46,7 @@ function Clock() {
       title="Current date and time"
     >
       {WEEKDAY_LABELS[weekdayOf(key)]} {Number(key.slice(8))}{' '}
-      {MONTHS[Number(key.slice(5, 7)) - 1]} · {pad(now.getHours())}:
-      {pad(now.getMinutes())}
+      {MONTHS[Number(key.slice(5, 7)) - 1]} · {formatClock(nowMinute(now), timeFormat)}
     </span>
   )
 }
