@@ -207,6 +207,9 @@ function scheduleDemoBlocks(
     { taskId: 'task-pset', minutes: 90 },
   ]
 
+  // Start on a quarter hour rather than at whatever minute it happens to be.
+  const now = Math.ceil(nowMinute() / 15) * 15
+
   for (const [index, want] of wanted.entries()) {
     const schedules = buildSchedules(
       today,
@@ -217,7 +220,7 @@ function scheduleDemoBlocks(
     )
     const slot = earliestFit(want.minutes, schedules, {
       date: today,
-      minute: nowMinute(),
+      minute: now,
     })
     if (!slot) continue
 
