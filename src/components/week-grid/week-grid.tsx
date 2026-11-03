@@ -40,7 +40,11 @@ type DayItem =
  * so two commitments that collide share the column instead of hiding one
  * another.
  */
-export function WeekGrid() {
+export function WeekGrid({
+  onSelectEntry,
+}: {
+  onSelectEntry?: (entryId: string) => void
+}) {
   const { dates, occurrences } = useWeek()
   const subjects = useTimetable((state) => state.subjects)
   const tasks = useTimetable((state) => state.tasks)
@@ -159,6 +163,11 @@ export function WeekGrid() {
                     lane={lane}
                     lanes={lanes}
                     window={WINDOW}
+                    onSelect={
+                      onSelectEntry
+                        ? () => onSelectEntry(item.occurrence.entryId)
+                        : undefined
+                    }
                   />
                 ) : (
                   <StudyBlock

@@ -51,6 +51,7 @@ const SKETCH_RADIUS = '6px 2px 7px 3px / 3px 7px 2px 6px'
 type EntryBlockProps = BlockProps & {
   occurrence: Occurrence
   color?: SubjectColor
+  onSelect?: () => void
 }
 
 /** A committed session: lecture, lab, shift. Solid, because it is fixed. */
@@ -60,6 +61,7 @@ export function EntryBlock({
   lane,
   lanes,
   window,
+  onSelect,
 }: EntryBlockProps) {
   const height = heightFor(occurrence.start, occurrence.end) - 2
   const showTime = height >= 40
@@ -83,6 +85,14 @@ export function EntryBlock({
         borderRadius: SKETCH_RADIUS,
       }}
     >
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-label={`${occurrence.title}, ${formatClock(occurrence.start)} to ${formatClock(occurrence.end)}`}
+          className="absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+        />
+      ) : null}
       <p
         className={cn(
           'font-hand text-[0.8rem] leading-[1.2]',
