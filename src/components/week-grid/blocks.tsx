@@ -1,5 +1,11 @@
 import type { CSSProperties } from 'react'
-import { FiX } from 'react-icons/fi'
+import { FiCalendar, FiEdit2, FiTrash2 } from 'react-icons/fi'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { formatClock, type TimeFormat } from '@/domain/time'
 import type {
   Interval,
@@ -128,6 +134,7 @@ type StudyBlockProps = BlockProps & {
   block: TaskBlock
   task: Task
   color?: SubjectColor
+  onEdit?: () => void
   onRemove?: () => void
 }
 
@@ -143,6 +150,7 @@ export function StudyBlock({
   lanes,
   window,
   timeFormat,
+  onEdit,
   onRemove,
 }: StudyBlockProps) {
   const height = heightFor(block.start, block.end) - 2
@@ -185,16 +193,35 @@ export function StudyBlock({
         </p>
       ) : null}
 
-      {onRemove ? (
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove ${task.title} session`}
-          className="absolute top-0.5 right-0.5 z-10 rounded-[4px] p-0.5 text-current opacity-0 transition-opacity hover:bg-paper-raised/70 focus-visible:opacity-100 group-hover:opacity-100"
-        >
-          <FiX className="size-3" />
-        </button>
-      ) : null}
+      {/*
+       * The whole block is the menu trigger. A corner button was invisible
+       * until hover and got clipped on short blocks; this works at any height.
+       */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={`${task.title} session, ${formatClock(block.start, timeFormat)} to ${formatClock(block.end, timeFormat)}`}
+            className="absolute inset-0 z-10 rounded-[inherit] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink"
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          {onEdit ? (
+            <DropdownMenuItem onSelect={onEdit}>
+              <FiEdit2 />
+              Edit task
+            </DropdownMenuItem>
+          ) : null}
+          {onRemove ? (
+            <DropdownMenuItem onSelect={onRemove}>
+              <FiTrash2 />
+              Remove session
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <FiCalendar className="pointer-events-none absolute top-1 right-1 size-2.5 opacity-40" />
     </article>
   )
 }

@@ -33,10 +33,12 @@ type DayLayout = { date: DateKey; items: LaidOut<DayItem>[] }
 
 export function WeekGrid({
   onSelectEntry,
+  onSelectTask,
   onRemoveBlock,
   preview,
 }: {
   onSelectEntry?: (entryId: string) => void
+  onSelectTask?: (taskId: string) => void
   onRemoveBlock?: (blockId: string) => void
   preview?: DropPreview | null
 }) {
@@ -155,6 +157,7 @@ export function WeekGrid({
               preview={preview}
               timeFormat={timeFormat}
               onSelectEntry={onSelectEntry}
+              onSelectTask={onSelectTask}
               onRemoveBlock={onRemoveBlock}
             />
           ))}
@@ -175,6 +178,7 @@ type DayColumnProps = {
   timeFormat: TimeFormat
   preview?: DropPreview | null
   onSelectEntry?: (entryId: string) => void
+  onSelectTask?: (taskId: string) => void
   onRemoveBlock?: (blockId: string) => void
 }
 
@@ -189,6 +193,7 @@ function DayColumn({
   timeFormat,
   preview,
   onSelectEntry,
+  onSelectTask,
   onRemoveBlock,
 }: DayColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: date, data: { date } })
@@ -233,6 +238,9 @@ function DayColumn({
             lanes={lanes}
             window={window}
             timeFormat={timeFormat}
+            onEdit={
+              onSelectTask ? () => onSelectTask(item.task.id) : undefined
+            }
             onRemove={
               onRemoveBlock ? () => onRemoveBlock(item.block.id) : undefined
             }

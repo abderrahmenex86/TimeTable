@@ -39,6 +39,8 @@ however much of it is already on the calendar.
   work the task has left, shortened to whatever gap you drop into, so a
   four-hour task dropped into a one-hour hole books an hour. Conflicting drops
   are refused and name what they would overlap.
+- **Booked sessions** are clickable: edit the task or remove the session, with
+  undo.
 - **Subjects** can be renamed and recoloured from the task panel; the change
   applies to every session using them.
 - **Find a slot**: every task has a button that places it in the earliest gap

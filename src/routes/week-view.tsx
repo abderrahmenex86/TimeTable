@@ -232,6 +232,10 @@ export function WeekView() {
               <div className="hidden min-h-0 flex-1 md:flex">
                 <WeekGrid
                   onSelectEntry={openEntry}
+                  onSelectTask={(taskId) => {
+                    const task = tasks.find((candidate) => candidate.id === taskId)
+                    if (task) openTask(task)
+                  }}
                   onRemoveBlock={(blockId) =>
                     run('Session removed', () => deleteBlock(blockId))
                   }
