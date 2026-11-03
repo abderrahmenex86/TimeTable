@@ -5,7 +5,9 @@ import {
   earliestFit,
 } from '@/domain/free-time'
 import { expandRange } from '@/domain/recurrence'
-import type { Subject, Task, TaskBlock, Term, TimetableEntry } from '@/domain/types'
+import type { Subject, Task, TaskBlock, Term, TimetableEntry, Weekday } from '@/domain/types'
+import { weekdayOf } from '@/domain/dates'
+import { DEFAULT_SETTINGS } from './model'
 import type { TimetableData } from './model'
 
 /**
@@ -160,12 +162,15 @@ function createTasks(today: string): Task[] {
   ]
 }
 
-export function createSeedData(today: string = todayKey()): TimetableData {
+export function createSeedData(
+  today: string = todayKey(),
+  weekStartsOn: Weekday = DEFAULT_SETTINGS.weekStartsOn,
+): TimetableData {
   const term: Term = {
     id: 'term-current',
     name: 'Fall term',
     // Open the term eight weeks in, so the demo lands mid-semester.
-    startDate: addDays(startOfWeek(today), -8 * 7),
+    startDate: addDays(startOfWeek(today, weekStartsOn), -8 * 7),
     weekCount: 12,
   }
 
@@ -185,6 +190,7 @@ export function createSeedData(today: string = todayKey()): TimetableData {
     exceptions,
     tasks,
     blocks,
+    settings: { ...DEFAULT_SETTINGS, weekStartsOn },
   }
 }
 
@@ -240,8 +246,7 @@ function scheduleDemoBlocks(
 function nextWeekday(from: string, weekday: number): string {
   for (let offset = 0; offset < 7; offset += 1) {
     const date = addDays(from, offset)
-    const day = ((new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7) + 1
-    if (day === weekday) return date
+    if (weekdayOf(date) === weekday) return date
   }
   return from
 }

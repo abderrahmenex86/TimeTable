@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core'
-import { CalendarPlus } from 'lucide-react'
+import { FiCalendar } from 'react-icons/fi'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -28,6 +28,7 @@ type TaskCardProps = {
 
 export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) {
   const toggleTask = useTimetable((state) => state.toggleTask)
+  const tasksLocked = useTimetable((state) => state.settings.tasksLocked)
   const { placeInNextSlot } = useScheduling()
   const run = useUndoable()
 
@@ -36,6 +37,7 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
   const { setNodeRef, listeners, isDragging } = useDraggable({
     id: task.id,
     data: { taskId: task.id },
+    disabled: tasksLocked,
   })
 
   const done = task.status === 'done'
@@ -60,7 +62,10 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
         ref={setNodeRef}
         {...listeners}
         className={cn(
-          'group flex cursor-grab items-start gap-2 border border-rule bg-paper-raised px-2.5 py-2 transition-colors active:cursor-grabbing',
+          'group flex items-start gap-2 border border-rule bg-paper-raised px-2.5 py-2 transition-colors',
+          tasksLocked
+            ? 'cursor-default'
+            : 'cursor-grab active:cursor-grabbing',
           !done && 'hover:border-ink-30',
           done && 'opacity-70',
           isDragging && 'opacity-40',
@@ -101,13 +106,18 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
                   <button
                     type="button"
                     onClick={handlePlace}
+                    disabled={tasksLocked}
                     aria-label={`Place ${task.title} in the next free slot`}
-                    className="mt-0.5 shrink-0 rounded-sm p-0.5 text-ink-40 opacity-0 transition-opacity hover:text-sky-pen focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink group-hover:opacity-100"
+                    className="mt-0.5 shrink-0 rounded-sm p-0.5 text-ink-40 opacity-0 transition-opacity hover:text-sky-pen focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0"
                   >
-                    <CalendarPlus className="size-3.5" />
+                    <FiCalendar className="size-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Find the next free slot</TooltipContent>
+                <TooltipContent>
+                  {tasksLocked
+                    ? 'Calendar is locked'
+                    : 'Find the next free slot'}
+                </TooltipContent>
               </Tooltip>
             ) : null}
           </div>

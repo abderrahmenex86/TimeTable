@@ -4,12 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#faf7f0" />
+    <meta name="theme-color" content="#fbfaf8" />
     <meta
       name="description"
       content="A timetable that knows your free time. Classes and commitments up front, tasks fitted into the gaps before they are due."
     />
     <title>Timetable</title>
+    <script>
+      // Restored before first paint — IndexedDB is async, so a dark-mode user
+      // would otherwise see a white flash on every load.
+      try {
+        if (localStorage.getItem('timetable-theme') === 'dark') {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
+        }
+      } catch (error) {
+        /* storage unavailable */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

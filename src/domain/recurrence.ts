@@ -1,4 +1,4 @@
-import { addDays, isWithinTerm, weekDates, weekIndexFor } from './dates'
+import { addDays, isWithinTerm, weekDates, weekIndexFor, weekdayOf } from './dates'
 import type {
   DateKey,
   EntryException,
@@ -7,6 +7,7 @@ import type {
   TimetableEntry,
   WeekParity,
   WeekRange,
+  Weekday,
 } from './types'
 
 /**
@@ -55,6 +56,13 @@ export function expandWeek(
   const dates = weekDates(term, weekIndex)
   const occurrences: Occurrence[] = []
 
+  // Resolve by weekday rather than by position: the week can start on any day,
+  // so `dates[0]` is not necessarily Monday.
+  const dateByWeekday = new Map<Weekday, DateKey>()
+  for (const date of dates) {
+    dateByWeekday.set(weekdayOf(date), date)
+  }
+
   for (const entry of entries) {
     const { recurrence } = entry
     if (recurrence.end <= recurrence.start) continue
@@ -63,7 +71,7 @@ export function expandWeek(
 
     // A malformed entry with duplicate days should still only appear once.
     for (const day of new Set(recurrence.days)) {
-      const date = dates[day - 1]
+      const date = dateByWeekday.get(day)
       if (!date) continue
       if (cancelled.has(`${entry.id}|${date}`)) continue
 

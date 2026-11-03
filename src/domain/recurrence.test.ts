@@ -151,6 +151,64 @@ describe('expandRange', () => {
   })
 })
 
+describe('weeks that do not start on Monday', () => {
+  const sundayTerm: Term = {
+    id: 't2',
+    name: 'Sunday term',
+    startDate: '2026-11-01', // Sunday
+    weekCount: 12,
+  }
+
+  const monday: TimetableEntry[] = [
+    {
+      id: 'monday',
+      subjectId: 's',
+      title: 'Monday lecture',
+      recurrence: { days: [1], start: 540, end: 600, parity: 'all' },
+    },
+  ]
+
+  it('resolves a weekday against the real date, not the column index', () => {
+    // Regression: this used to land on 2026-11-01 because the code assumed
+    // dates[0] was always Monday.
+    const [occurrence] = expandWeek(sundayTerm, monday, [], 1)
+    expect(occurrence.date).toBe('2026-11-02')
+  })
+
+  it('handles a Sunday rule in a Sunday-starting week', () => {
+    const sunday: TimetableEntry[] = [
+      {
+        id: 'sunday',
+        subjectId: 's',
+        title: 'Sunday lecture',
+        recurrence: { days: [7], start: 540, end: 600, parity: 'all' },
+      },
+    ]
+    const [occurrence] = expandWeek(sundayTerm, sunday, [], 1)
+    expect(occurrence.date).toBe('2026-11-01')
+  })
+
+  it('still honours week parity and exceptions', () => {
+    const odd: TimetableEntry[] = [
+      {
+        ...monday[0],
+        id: 'odd',
+        recurrence: { days: [1], start: 540, end: 600, parity: 'odd' },
+      },
+    ]
+    expect(expandWeek(sundayTerm, odd, [], 1)).toHaveLength(1)
+    expect(expandWeek(sundayTerm, odd, [], 2)).toHaveLength(0)
+
+    const result = expandWeek(
+      sundayTerm,
+      monday,
+      [{ entryId: 'monday', date: '2026-11-02', kind: 'cancelled' }],
+      1,
+    )
+    expect(result).toHaveLength(0)
+  })
+})
+
 describe('groupOccurrencesByDate', () => {
   it('buckets by day', () => {
     const grouped = groupOccurrencesByDate(expandWeek(term, entries, [], 9))

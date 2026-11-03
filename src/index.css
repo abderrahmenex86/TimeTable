@@ -6,72 +6,63 @@
 @import './styles/paper.css';
 
 /*
- * This app is paper. Keeping this variant scoped to a .dark class — which we
- * never set — makes every `dark:` utility in the shadcn sources inert, instead
- * of letting Tailwind's default media-query dark variant fire on a system
- * dark-mode preference.
+ * Theme switching is class-based on <html>. Keeping this variant scoped to a
+ * .dark class (rather than the media query) is what lets the toggle work in
+ * both directions.
  */
 @custom-variant dark (&:is(.dark *));
 
 /* ================================================================ tokens === */
 
 @theme {
-  /* --- paper & ink ------------------------------------------------------ */
-  --color-paper: #faf7f0;
-  --color-paper-sunk: #f3eee3;
-  --color-paper-raised: #fffdf9;
-  --color-ink: #1c1b19;
-  --color-ink-70: #3a3833;
-  --color-ink-60: #5c5852;
-  --color-ink-40: #8a857c;
-  --color-ink-30: #a9a398;
-  --color-ink-15: #1c1b1926;
-  --color-rule: #e0d9cb;
-  --color-rule-soft: #eae4d7;
-
-  /* --- subject pastels ---------------------------------------------------
-     Each subject is a pair: a pastel fill for the block body, and a "pen"
-     tone that carries text and the accent bar. Every pen clears 4.5:1 on its
-     own fill, so subject colour never has to be the only signal.
-
-     `@theme static` matters here. These variables are only ever referenced
-     from an inline style built at runtime (`var(--color-${color}-fill)`), so
-     Tailwind's normal unused-variable pruning cannot see them and drops the
-     palette. Static forces all of them into the output.                     */
-  /* placeholder: see the static block below */
-
   /* --- type -------------------------------------------------------------
      Virgil carries voice (titles, labels, block text). Inter carries speed
-     (numerals, metadata, long-form input). See notes in README.            */
+     (numerals, metadata, long-form input).                                 */
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-hand: 'Virgil', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
 
-  /* --- motion ----------------------------------------------------------- */
+  /* --- motion ------------------------------------------------------------ */
   --ease-pen: cubic-bezier(0.3, 0.9, 0.4, 1);
 }
 
-/* Subject palette. `static` because these names are composed at runtime
-   (`var(--color-${color}-fill)`), which Tailwind's pruning cannot see. */
-@theme static {
-  --color-rose-fill: #fadad6;
-  --color-rose-pen: #a34a3c;
-  --color-sage-fill: #d9e8d6;
-  --color-sage-pen: #4e6b4a;
-  --color-sky-fill: #d6e4f2;
-  --color-sky-pen: #3f5f79;
-  --color-butter-fill: #f7e8cd;
-  --color-butter-pen: #8a6a32;
-  --color-lilac-fill: #e4daf1;
-  --color-lilac-pen: #665282;
-  --color-mint-fill: #d5ebe1;
-  --color-mint-pen: #3f6e5f;
-}
-
-/* =================================================== shadcn ui mapping === */
-
+/*
+ * Everything below is `inline`, so utilities compile to `var(--surface)` rather
+ * than a frozen value. That is what makes a `.dark` class on <html> re-theme the
+ * whole app without a second set of utility classes.
+ */
 @theme inline {
   --font-heading: var(--font-hand);
 
+  /* --- surfaces ---------------------------------------------------------- */
+  --color-paper: var(--surface);
+  --color-paper-sunk: var(--surface-sunk);
+  --color-paper-raised: var(--surface-raised);
+  --color-ink: var(--fg);
+  --color-ink-70: var(--fg-70);
+  --color-ink-60: var(--fg-60);
+  --color-ink-40: var(--fg-40);
+  --color-ink-30: var(--fg-30);
+  --color-ink-15: var(--fg-15);
+  --color-rule: var(--line);
+  --color-rule-soft: var(--line-soft);
+
+  /* --- subject palette ---------------------------------------------------
+     Exposed as utilities (`text-rose-pen`, `bg-sky-fill/25`) as well as raw
+     variables for the block components, which compose `--subject-fill`.       */
+  --color-rose-fill: var(--rose-fill);
+  --color-rose-pen: var(--rose-pen);
+  --color-sage-fill: var(--sage-fill);
+  --color-sage-pen: var(--sage-pen);
+  --color-sky-fill: var(--sky-fill);
+  --color-sky-pen: var(--sky-pen);
+  --color-butter-fill: var(--butter-fill);
+  --color-butter-pen: var(--butter-pen);
+  --color-lilac-fill: var(--lilac-fill);
+  --color-lilac-pen: var(--lilac-pen);
+  --color-mint-fill: var(--mint-fill);
+  --color-mint-pen: var(--mint-pen);
+
+  /* --- shadcn semantics -------------------------------------------------- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -95,40 +86,127 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
+
+/* ================================================================= light === */
 
 :root {
   color-scheme: light;
 
-  --radius: 0.7rem;
+  --radius: 0.75rem;
 
-  --background: var(--color-paper);
-  --foreground: var(--color-ink);
+  /* Whitish paper: a touch of warmth, but not cream. */
+  --surface: #fbfaf8;
+  --surface-sunk: #f4f3f0;
+  --surface-raised: #ffffff;
 
-  --card: var(--color-paper-raised);
-  --card-foreground: var(--color-ink);
-  --popover: var(--color-paper-raised);
-  --popover-foreground: var(--color-ink);
+  --fg: #1a1918;
+  --fg-70: #3a3835;
+  --fg-60: #57544f;
+  --fg-40: #85817a;
+  --fg-30: #a8a49c;
+  --fg-15: #1a191826;
 
-  /* Primary action is a pastel with a pen-coloured outline and text — never
-     white on pastel, which would fail contrast and read as muddy. */
-  --primary: var(--color-sky-fill);
-  --primary-foreground: var(--color-sky-pen);
+  --line: #e6e4df;
+  --line-soft: #efeeea;
 
-  --secondary: var(--color-paper-sunk);
-  --secondary-foreground: var(--color-ink-70);
+  --grain-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 
-  --muted: var(--color-paper-sunk);
-  --muted-foreground: var(--color-ink-60);
+  /* Subject palettes: a pastel fill plus a "pen" tone that carries text and
+     the accent bar. Every pen clears 4.5:1 on its own fill. */
+  --rose-fill: #fbe4e1;
+  --rose-pen: #a3443a;
+  --sage-fill: #ddeeda;
+  --sage-pen: #47663f;
+  --sky-fill: #dbe9f6;
+  --sky-pen: #35566f;
+  --butter-fill: #f9edd5;
+  --butter-pen: #85642a;
+  --lilac-fill: #e9e2f4;
+  --lilac-pen: #5f4c7e;
+  --mint-fill: #d8eee6;
+  --mint-pen: #346a5a;
 
-  --accent: #ece5d8;
-  --accent-foreground: var(--color-ink);
+  --background: var(--surface);
+  --foreground: var(--fg);
+  --card: var(--surface-raised);
+  --card-foreground: var(--fg);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--fg);
 
-  --destructive: var(--color-rose-pen);
+  --primary: var(--sky-fill);
+  --primary-foreground: var(--sky-pen);
 
-  --border: var(--color-rule);
-  --input: var(--color-rule);
-  --ring: color-mix(in srgb, var(--color-sky-pen) 55%, transparent);
+  --secondary: var(--surface-sunk);
+  --secondary-foreground: var(--fg-70);
+  --muted: var(--surface-sunk);
+  --muted-foreground: var(--fg-60);
+  --accent: #eeede9;
+  --accent-foreground: var(--fg);
+  --destructive: var(--rose-pen);
+
+  --border: var(--line);
+  --input: var(--line);
+  --ring: color-mix(in srgb, var(--sky-pen) 55%, transparent);
+}
+
+/* ================================================================== dark === */
+
+.dark {
+  color-scheme: dark;
+
+  --surface: #17181a;
+  --surface-sunk: #1c1e21;
+  --surface-raised: #212327;
+
+  --fg: #f1efea;
+  --fg-70: #d2cfc9;
+  --fg-60: #a5a19a;
+  --fg-40: #7c7973;
+  --fg-30: #5c5a55;
+  --fg-15: #f1efea1f;
+
+  --line: #2e3033;
+  --line-soft: #26282b;
+
+  /* Ink on dark paper reads as noise rather than texture; leave it flat. */
+  --grain-image: none;
+
+  --rose-fill: #3a2523;
+  --rose-pen: #e8a79c;
+  --sage-fill: #263327;
+  --sage-pen: #a6c99c;
+  --sky-fill: #1f3040;
+  --sky-pen: #93c0e6;
+  --butter-fill: #352c1e;
+  --butter-pen: #ddbc80;
+  --lilac-fill: #2c2739;
+  --lilac-pen: #bfaee0;
+  --mint-fill: #1d322b;
+  --mint-pen: #96d2bd;
+
+  --background: var(--surface);
+  --foreground: var(--fg);
+  --card: var(--surface-raised);
+  --card-foreground: var(--fg);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--fg);
+
+  --primary: var(--sky-fill);
+  --primary-foreground: var(--sky-pen);
+
+  --secondary: var(--surface-sunk);
+  --secondary-foreground: var(--fg-70);
+  --muted: var(--surface-sunk);
+  --muted-foreground: var(--fg-60);
+  --accent: #2a2c30;
+  --accent-foreground: var(--fg);
+  --destructive: var(--rose-pen);
+
+  --border: var(--line);
+  --input: var(--line);
+  --ring: color-mix(in srgb, var(--sky-pen) 55%, transparent);
 }
 
 @layer base {
@@ -149,8 +227,8 @@
     letter-spacing: 0.01em;
   }
 
-  /* Numbers that get compared vertically — times, counts, durations — must
-     not reflow when they change. */
+  /* Numbers compared vertically — times, counts, durations — must not reflow
+     when they change. */
   time,
   [data-num] {
     font-variant-numeric: tabular-nums;

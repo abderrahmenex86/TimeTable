@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { todayKey, weekIndexFor } from '@/domain/dates'
+import { startOfWeek, todayKey, weekIndexFor } from '@/domain/dates'
 import type {
   DateKey,
   EntryException,
@@ -8,8 +8,14 @@ import type {
   Task,
   TaskBlock,
   TimetableEntry,
+  Weekday,
 } from '@/domain/types'
-import { createEmptyData, SCHEMA_VERSION, type TimetableData } from './model'
+import {
+  createEmptyData,
+  SCHEMA_VERSION,
+  type ThemeMode,
+  type TimetableData,
+} from './model'
 import { createIndexedDbStorage } from './persistence'
 import { createSeedData } from './seed'
 
@@ -27,6 +33,7 @@ function pickData(state: TimetableData): TimetableData {
     exceptions: state.exceptions,
     tasks: state.tasks,
     blocks: state.blocks,
+    settings: state.settings,
   }
 }
 
@@ -35,6 +42,10 @@ type Actions = {
   goToToday: () => void
   setHydrated: () => void
   toggleFreeTime: () => void
+
+  setTheme: (theme: ThemeMode) => void
+  setWeekStartsOn: (weekStartsOn: Weekday) => void
+  toggleTaskLock: () => void
 
   addSubject: (subject: Subject) => void
   updateSubject: (id: string, patch: Partial<Subject>) => void
@@ -107,6 +118,30 @@ export const useTimetable = create<TimetableState>()(
 
         toggleFreeTime: () =>
           set((state) => ({ showFreeTime: !state.showFreeTime })),
+
+        setTheme: (theme) =>
+          set((state) => ({ settings: { ...state.settings, theme } })),
+
+        /**
+         * Re-anchors the term so week 1 still starts on the chosen day. Without
+         * this the week index maths would silently drift by a few days.
+         */
+        setWeekStartsOn: (weekStartsOn) =>
+          set((state) => ({
+            settings: { ...state.settings, weekStartsOn },
+            term: {
+              ...state.term,
+              startDate: startOfWeek(state.term.startDate, weekStartsOn),
+            },
+          })),
+
+        toggleTaskLock: () =>
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              tasksLocked: !state.settings.tasksLocked,
+            },
+          })),
 
         addSubject: (subject) =>
           set((state) => ({ subjects: [...state.subjects, subject] })),
@@ -258,7 +293,10 @@ export const useTimetable = create<TimetableState>()(
 
         resetToDemo: () =>
           set((state) => {
-            const fresh = createSeedData()
+            const fresh = createSeedData(
+              todayKey(),
+              state.settings.weekStartsOn,
+            )
             return {
               ...fresh,
               weekIndex: clampWeek(
@@ -271,7 +309,9 @@ export const useTimetable = create<TimetableState>()(
 
         clearAll: () =>
           set((state) => ({
-            ...createEmptyData(todayKey()),
+            ...createEmptyData(todayKey(), state.settings.weekStartsOn),
+            // Keep the user's preferences; only the timetable is cleared.
+            settings: state.settings,
             weekIndex: 1,
             undoStack: pushUndo(state),
           })),

@@ -77,13 +77,14 @@ export function weekdayOf(key: DateKey): Weekday {
   return (((date.getUTCDay() + 6) % 7) + 1) as Weekday
 }
 
-/** Monday of the week containing `key`. */
-export function startOfWeek(key: DateKey): DateKey {
-  return addDays(key, -(weekdayOf(key) - 1))
+/** Monday of the week containing `key`, or the configured first day. */
+export function startOfWeek(key: DateKey, weekStartsOn: Weekday = 1): DateKey {
+  const offset = (weekdayOf(key) - weekStartsOn + 7) % 7
+  return addDays(key, -offset)
 }
 
-export function endOfWeek(key: DateKey): DateKey {
-  return addDays(startOfWeek(key), 6)
+export function endOfWeek(key: DateKey, weekStartsOn: Weekday = 1): DateKey {
+  return addDays(startOfWeek(key, weekStartsOn), 6)
 }
 
 /** `-1` for "the week before week 1", `weekCount + 1` for "the week after". */

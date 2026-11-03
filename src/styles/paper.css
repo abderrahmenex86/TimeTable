@@ -5,16 +5,20 @@
  * utilities. That is what lets shadcn primitives be reskinned without touching
  * their generated markup. It also means: don't compose these classes with
  * rounded-* utilities and expect the utility to win.
+ *
+ * Colours come from the raw theme variables (--surface, --fg, --line) rather
+ * than the Tailwind `--color-*` names, because those are inlined at build time
+ * and do not exist as custom properties at runtime.
  */
 
 /* ---------------------------------------------------------------- paper --- */
 
 body {
-  background-color: var(--color-paper);
+  background-color: var(--surface);
   /* A static, tiled grain. Not a live SVG filter — this must never repaint
-     on scroll. The opacity lives inside the SVG, so it tints the paper. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  color: var(--color-ink);
+     on scroll. The opacity lives inside the SVG. */
+  background-image: var(--grain-image);
+  color: var(--fg);
   font-family: var(--font-sans);
   font-size: 0.875rem;
   line-height: 1.55;
@@ -23,13 +27,13 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-sky-fill);
-  color: var(--color-ink);
+  background-color: var(--sky-fill);
+  color: var(--sky-pen);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-ink-30) transparent;
+  scrollbar-color: var(--fg-30) transparent;
 }
 
 /* ------------------------------------------------------------- textures --- */
@@ -38,7 +42,7 @@ body {
 .paper-dots {
   background-image: radial-gradient(
     circle at 1px 1px,
-    var(--color-rule) 1px,
+    var(--line) 1px,
     transparent 1.3px
   );
   background-size: 18px 18px;
@@ -49,28 +53,28 @@ body {
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0 27px,
-    var(--color-rule-soft) 27px 28px
+    var(--line-soft) 27px 28px
   );
 }
 
 /* --------------------------------------------------- hand-drawn geometry --- */
 
 .sketch {
-  border: 1.5px solid var(--color-ink);
+  border: 1.5px solid var(--fg);
   border-radius: 14px 5px 16px 6px / 6px 16px 5px 14px;
 }
 
 .sketch-sm {
-  border: 1.5px solid var(--color-ink);
+  border: 1.5px solid var(--fg);
   border-radius: 9px 3px 10px 4px / 4px 10px 3px 9px;
 }
 
 .ink-shadow {
-  box-shadow: 3px 4px 0 var(--color-ink-15);
+  box-shadow: 3px 4px 0 var(--fg-15);
 }
 
 .ink-shadow-sm {
-  box-shadow: 2px 3px 0 var(--color-ink-15);
+  box-shadow: 2px 3px 0 var(--fg-15);
 }
 
 /* Sub-degree misalignment reads as hand-placed, without hurting alignment
@@ -105,35 +109,35 @@ body {
 }
 
 [data-slot='button'][data-variant='default'] {
-  border-color: color-mix(in srgb, var(--color-sky-pen) 30%, transparent);
-  box-shadow: 2px 3px 0 var(--color-ink-15);
+  border-color: color-mix(in srgb, var(--sky-pen) 30%, transparent);
+  box-shadow: 2px 3px 0 var(--fg-15);
 }
 
 [data-slot='button'][data-variant='outline'] {
-  border-color: var(--color-ink-30);
-  box-shadow: 2px 3px 0 var(--color-ink-15);
+  border-color: var(--fg-30);
+  box-shadow: 2px 3px 0 var(--fg-15);
 }
 
 [data-slot='button'][data-variant='destructive'] {
-  border-color: color-mix(in srgb, var(--color-rose-pen) 30%, transparent);
+  border-color: color-mix(in srgb, var(--rose-pen) 30%, transparent);
 }
 
 [data-slot='button']:active:not(:disabled) {
   transform: translateY(1.5px);
-  box-shadow: 0 0 0 var(--color-ink-15);
+  box-shadow: 0 0 0 var(--fg-15);
 }
 
 [data-slot='input'],
 [data-slot='textarea'],
 [data-slot='select-trigger'] {
-  background-color: var(--color-paper-raised);
-  border-color: var(--color-rule);
+  background-color: var(--surface-raised);
+  border-color: var(--line);
 }
 
 [data-slot='input']:focus-visible,
 [data-slot='textarea']:focus-visible,
 [data-slot='select-trigger']:focus-visible {
-  border-color: var(--color-sky-pen);
+  border-color: var(--sky-pen);
 }
 
 /* Floating surfaces get the full sketched frame. */
@@ -141,10 +145,10 @@ body {
 [data-slot='popover-content'],
 [data-slot='dropdown-menu-content'],
 [data-slot='select-content'] {
-  border: 1.5px solid var(--color-ink);
+  border: 1.5px solid var(--fg);
   border-radius: 14px 5px 16px 6px / 6px 16px 5px 14px;
-  box-shadow: 4px 5px 0 var(--color-ink-15);
-  background-color: var(--color-paper-raised);
+  box-shadow: 4px 5px 0 var(--fg-15);
+  background-color: var(--surface-raised);
 }
 
 [data-slot='dropdown-menu-item'],
@@ -153,9 +157,9 @@ body {
 }
 
 [data-slot='tabs-list'] {
-  background-color: var(--color-paper-sunk);
+  background-color: var(--surface-sunk);
   border-radius: 10px 4px 11px 4px / 4px 11px 4px 10px;
-  border: 1px solid var(--color-rule);
+  border: 1px solid var(--line);
   padding: 3px;
 }
 
@@ -164,24 +168,24 @@ body {
 }
 
 [data-slot='tabs-trigger'][data-state='active'] {
-  background-color: var(--color-paper-raised);
-  box-shadow: 1.5px 2px 0 var(--color-ink-15);
+  background-color: var(--surface-raised);
+  box-shadow: 1.5px 2px 0 var(--fg-15);
 }
 
 /* Drawer is edge-anchored; a full frame would be clipped. Top rule only. */
 [data-slot='drawer-content'] {
-  border-top: 1.5px solid var(--color-ink);
-  box-shadow: 0 -4px 0 var(--color-ink-15);
+  border-top: 1.5px solid var(--fg);
+  box-shadow: 0 -4px 0 var(--fg-15);
 }
 
 /* Sonner's own rules are `[data-sonner-toast][data-styled=true]`, so matching
    that specificity is the only way to restyle it. */
 [data-sonner-toast][data-styled='true'] {
-  border: 1.5px solid var(--color-ink) !important;
+  border: 1.5px solid var(--fg) !important;
   border-radius: 10px 3px 11px 4px / 4px 11px 3px 10px !important;
-  background-color: var(--color-paper-raised) !important;
-  color: var(--color-ink) !important;
-  box-shadow: 3px 4px 0 var(--color-ink-15) !important;
+  background-color: var(--surface-raised) !important;
+  color: var(--fg) !important;
+  box-shadow: 3px 4px 0 var(--fg-15) !important;
   font-family: var(--font-sans) !important;
   padding: 12px 14px !important;
 }
@@ -191,10 +195,10 @@ body {
 }
 
 [data-sonner-toast][data-styled='true'] [data-button] {
-  border: 1.5px solid var(--color-sky-pen) !important;
+  border: 1.5px solid var(--sky-pen) !important;
   border-radius: 7px 2px 8px 3px / 3px 8px 2px 7px !important;
-  background-color: var(--color-sky-fill) !important;
-  color: var(--color-sky-pen) !important;
+  background-color: var(--sky-fill) !important;
+  color: var(--sky-pen) !important;
   font-family: var(--font-hand) !important;
   font-size: 0.8rem !important;
   height: 26px !important;
@@ -205,13 +209,13 @@ body {
 [data-sonner-toast][data-styled='true'] [data-button]:hover {
   background-color: color-mix(
     in srgb,
-    var(--color-sky-fill) 82%,
-    var(--color-sky-pen) 8%
+    var(--sky-fill) 82%,
+    var(--sky-pen) 8%
   ) !important;
 }
 
 [data-sonner-toast][data-styled='true'] [data-icon] {
-  color: var(--color-ink-60) !important;
+  color: var(--fg-60) !important;
 }
 
 /* ------------------------------------------------------------------ print --- */
@@ -220,6 +224,9 @@ body {
  * A timetable is a thing people still pin to a wall. The shell is a
  * fixed-height flex column on screen; on paper it has to flow, and the task
  * panel and controls have no business being there.
+ *
+ * The `dark` class is removed on `beforeprint` in usePrintTheme, so the light
+ * palette is what gets printed.
  */
 @media print {
   @page {
@@ -242,6 +249,14 @@ body {
     display: none !important;
   }
 
+  .print-flat {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
   .app-shell {
     height: auto !important;
     overflow: visible !important;
@@ -260,7 +275,7 @@ body {
   }
 
   .app-shell header {
-    border-bottom: 1.5px solid var(--color-ink);
+    border-bottom: 1.5px solid var(--fg);
   }
 }
 

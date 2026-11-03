@@ -83,6 +83,21 @@ describe('week boundaries', () => {
     expect(startOfWeek('2026-11-08')).toBe('2026-11-02')
   })
 
+  it('honours a Sunday week start', () => {
+    // Thu 5 Nov 2026 -> Sun 1 Nov
+    expect(startOfWeek('2026-11-05', 7)).toBe('2026-11-01')
+    expect(endOfWeek('2026-11-05', 7)).toBe('2026-11-07')
+    expect(startOfWeek('2026-11-01', 7)).toBe('2026-11-01')
+    expect(startOfWeek('2026-11-07', 7)).toBe('2026-11-01')
+    expect(startOfWeek('2026-11-08', 7)).toBe('2026-11-08')
+  })
+
+  it('honours any other first day', () => {
+    // Saturday start: Thu 5 Nov sits in the week beginning Sat 31 Oct.
+    expect(startOfWeek('2026-11-05', 6)).toBe('2026-10-31')
+    expect(endOfWeek('2026-11-05', 6)).toBe('2026-11-06')
+  })
+
   it('counts whole days between dates', () => {
     expect(daysBetween('2026-11-02', '2026-11-08')).toBe(6)
     expect(daysBetween('2026-11-08', '2026-11-02')).toBe(-6)

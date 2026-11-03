@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { X } from 'lucide-react'
+import { FiX } from 'react-icons/fi'
 import { formatClock } from '@/domain/time'
 import type {
   Interval,
@@ -187,7 +187,7 @@ export function StudyBlock({
           aria-label={`Remove ${task.title} session`}
           className="absolute top-0.5 right-0.5 z-10 rounded-[4px] p-0.5 text-current opacity-0 transition-opacity hover:bg-paper-raised/70 focus-visible:opacity-100 group-hover:opacity-100"
         >
-          <X className="size-3" />
+          <FiX className="size-3" />
         </button>
       ) : null}
     </article>

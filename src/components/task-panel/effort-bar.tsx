@@ -10,8 +10,8 @@ const SEGMENTS = 8
  *
  * Drawn as pen ticks rather than a smooth progress bar: eight discrete marks
  * survive the paper aesthetic, and they answer the question this app exists to
- * ask — "how much of this have I actually planned?" — rather than "how much
- * have I done?".
+ * ask — "how much of this have I actually planned?" — not "how much have I
+ * done?". Scheduling work never marks a task complete; only the checkbox does.
  */
 export function EffortBar({
   task,
@@ -27,7 +27,15 @@ export function EffortBar({
     blocks,
   )
   const filled = Math.round(ratio * SEGMENTS)
-  const misplaced = scheduled > 0 && remaining > 0 && scheduled < 15
+
+  const label =
+    scheduled === 0
+      ? `${formatDuration(estimate)} of work, nothing placed`
+      : overscheduled
+        ? `${formatDuration(estimate)} of work, ${formatDuration(scheduled)} placed`
+        : remaining === 0
+          ? `${formatDuration(estimate)} placed · still to do`
+          : `${formatDuration(scheduled)} of ${formatDuration(estimate)} placed`
 
   return (
     <div className={cn('mt-1.5', className)}>
@@ -43,12 +51,7 @@ export function EffortBar({
         ))}
       </div>
       <p className="mt-1 text-[0.62rem] text-ink-40" data-num>
-        {scheduled === 0
-          ? `${formatDuration(estimate)} of work, nothing placed`
-          : overscheduled
-            ? `${formatDuration(estimate)} of work, ${formatDuration(scheduled)} placed`
-            : `${formatDuration(scheduled)} of ${formatDuration(estimate)} placed`}
-        {misplaced ? ' · check overlap' : ''}
+        {label}
       </p>
     </div>
   )

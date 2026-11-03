@@ -5,8 +5,25 @@ import type {
   TaskBlock,
   Term,
   TimetableEntry,
+  Weekday,
 } from '@/domain/types'
 import { startOfWeek } from '@/domain/dates'
+
+export type ThemeMode = 'light' | 'dark'
+
+export type Settings = {
+  theme: ThemeMode
+  /** 1 = Monday … 7 = Sunday. */
+  weekStartsOn: Weekday
+  /** When locked, tasks cannot be dragged onto the calendar. */
+  tasksLocked: boolean
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  theme: 'light',
+  weekStartsOn: 1,
+  tasksLocked: false,
+}
 
 /**
  * The whole persisted document. One object, one IndexedDB key.
@@ -22,17 +39,21 @@ export type TimetableData = {
   exceptions: EntryException[]
   tasks: Task[]
   blocks: TaskBlock[]
+  settings: Settings
 }
 
 export const SCHEMA_VERSION = 1
 
 /** A blank slate that still knows which week it is. */
-export function createEmptyData(today: string): TimetableData {
+export function createEmptyData(
+  today: string,
+  weekStartsOn: Weekday = 1,
+): TimetableData {
   return {
     term: {
       id: 'term-current',
       name: 'Term',
-      startDate: startOfWeek(today),
+      startDate: startOfWeek(today, weekStartsOn),
       weekCount: 12,
     },
     subjects: [],
@@ -40,5 +61,6 @@ export function createEmptyData(today: string): TimetableData {
     exceptions: [],
     tasks: [],
     blocks: [],
+    settings: { ...DEFAULT_SETTINGS, weekStartsOn },
   }
 }

@@ -1,15 +1,15 @@
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import {
-  CircleCheckIcon,
-  InfoIcon,
-  TriangleAlertIcon,
-  OctagonXIcon,
-  Loader2Icon,
-} from "lucide-react"
+  FiCheckCircle,
+  FiInfo,
+  FiAlertTriangle,
+  FiXCircle,
+  FiLoader,
+} from "react-icons/fi"
 
 /**
  * Toasts are part of the paper: same ink border, same sketched radius as a
- * dialog. Forced to light because the app has no dark theme.
+ * dialog. The theme follows the app, so no separate light/dark handling.
  */
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
@@ -17,17 +17,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="light"
       className="toaster group"
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
+        success: <FiCheckCircle className="size-4" />,
+        info: <FiInfo className="size-4" />,
+        warning: <FiAlertTriangle className="size-4" />,
+        error: <FiXCircle className="size-4" />,
+        loading: <FiLoader className="size-4 animate-spin" />,
       }}
       style={
         {
-          "--normal-bg": "var(--color-paper-raised)",
-          "--normal-text": "var(--color-ink)",
-          "--normal-border": "var(--color-ink)",
+          "--normal-bg": "var(--surface-raised)",
+          "--normal-text": "var(--fg)",
+          "--normal-border": "var(--fg)",
           "--border-radius": "10px 3px 11px 4px / 4px 11px 3px 10px",
         } as React.CSSProperties
       }

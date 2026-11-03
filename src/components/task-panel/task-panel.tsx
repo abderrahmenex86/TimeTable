@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { Plus } from 'lucide-react'
+import { FiPlus } from 'react-icons/fi'
 import { Button } from '@/components/ui/button'
 import { endOfWeek, nowMinute, todayKey } from '@/domain/dates'
-import { groupTasks } from '@/domain/tasks'
+import { countOpen, groupTasks } from '@/domain/tasks'
 import type { Task, TaskBlock } from '@/domain/types'
 import { useTimetable } from '@/store/timetable-store'
 import { TaskCard } from './task-card'
@@ -17,16 +17,18 @@ type TaskPanelProps = {
  *
  * Grouped by urgency rather than by subject: the panel's job is to answer "what
  * needs attention", and the week grid already answers "what is Linear Algebra".
- * Rendered inside an `<aside>` on desktop and inside a drawer on phones.
+ * Rendered inside the task card on desktop and inside a drawer on phones.
  */
 export function TaskPanel({ onCreate, onEdit }: TaskPanelProps) {
   const tasks = useTimetable((state) => state.tasks)
   const blocks = useTimetable((state) => state.blocks)
   const subjects = useTimetable((state) => state.subjects)
+  const weekStartsOn = useTimetable((state) => state.settings.weekStartsOn)
 
   const today = todayKey()
   const now = { date: today, minute: nowMinute() }
-  const groups = groupTasks(tasks, now, endOfWeek(today))
+  const groups = groupTasks(tasks, now, endOfWeek(today, weekStartsOn))
+  const openCount = countOpen(tasks)
 
   const blocksByTask = useMemo(() => {
     const map = new Map<string, TaskBlock[]>()
@@ -45,15 +47,20 @@ export function TaskPanel({ onCreate, onEdit }: TaskPanelProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between border-b border-rule px-4 py-3">
-        <h2 className="font-hand text-[1.15rem] leading-none">Tasks</h2>
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-rule px-3">
+        <div className="flex items-baseline gap-2">
+          <h2 className="font-hand text-[1.15rem] leading-none">Tasks</h2>
+          <span className="text-[0.72rem] tabular-nums text-ink-40" data-num>
+            {openCount}
+          </span>
+        </div>
         <Button
           variant="outline"
           size="icon-sm"
           aria-label="New task"
           onClick={onCreate}
         >
-          <Plus />
+          <FiPlus />
         </Button>
       </div>
 

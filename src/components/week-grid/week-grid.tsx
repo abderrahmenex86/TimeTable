@@ -122,11 +122,11 @@ export function WeekGrid({
   }px, var(--color-rule-soft) ${HOUR_HEIGHT - 1}px ${HOUR_HEIGHT}px)`
 
   return (
-    <div className="app-scroll flex-1 overflow-auto overscroll-contain">
+    <div className="app-scroll paper-dots flex-1 overflow-auto overscroll-contain">
       <div className="min-w-[740px]">
         <div
           className={cn(
-            'sticky top-0 z-20 grid border-b border-rule bg-paper',
+            'sticky top-0 z-20 grid h-14 border-b border-rule bg-paper-raised',
             GRID_COLUMNS,
           )}
         >
@@ -254,7 +254,7 @@ function DayColumn({
 
 function DayHeader({ date, isToday }: { date: DateKey; isToday: boolean }) {
   return (
-    <div className="border-l border-rule-soft px-2 py-2 text-center">
+    <div className="flex h-full flex-col items-center justify-center border-l border-rule-soft px-2">
       <p className="text-[0.6rem] uppercase tracking-[0.16em] text-ink-40">
         {WEEKDAY_LABELS[weekdayOf(date)]}
       </p>
@@ -269,7 +269,7 @@ function DayHeader({ date, isToday }: { date: DateKey; isToday: boolean }) {
       </p>
       <span
         className={cn(
-          'mx-auto mt-1 block h-[1.5px] w-5',
+          'mt-1 block h-[1.5px] w-5',
           isToday ? 'bg-rose-pen' : 'bg-transparent',
         )}
       />
