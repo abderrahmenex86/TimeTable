@@ -319,18 +319,6 @@ body {
   box-shadow: none !important;
 }
 
-/* Scrollbars are hidden app-wide, so the picker fades its edges instead —
-   without it there is no cue that the hour and minute lists scroll. */
-.time-column {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 10px,
-    #000 calc(100% - 10px),
-    transparent 100%
-  );
-}
-
 /* ------------------------------------------------------------------ print --- */
 
 /*
