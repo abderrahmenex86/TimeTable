@@ -29,8 +29,8 @@ however much of it is already on the calendar.
 
 ## What it does
 
-- **Week grid** with recurring sessions, per-week parity (odd/even weeks), and
-  term week ranges.
+- **Week grid** with recurring sessions (every week, odd weeks or even weeks),
+  one-off sessions pinned to a single date, and term week ranges.
 - **Task panel** grouped by urgency, with a segmented bar showing how much of
   each task's estimate is already placed.
 - **Free time** as a toggle: the gaps get hatched, with a duration in each.
@@ -127,6 +127,8 @@ baseline.
 - No sync — the data belongs to one browser profile.
 - Cancelling a single session works; moving one does not (the rule would need
   a per-occurrence override).
+- A session is either weekly or one-off; there is no "every second Tuesday"
+  rule beyond odd/even weeks.
 - Tasks do not recur.
 - Dragging is mouse-only. Touch and keyboard use "find a slot".
 

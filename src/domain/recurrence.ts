@@ -66,6 +66,25 @@ export function expandWeek(
   for (const entry of entries) {
     const { recurrence } = entry
     if (recurrence.end <= recurrence.start) continue
+
+    // A one-off carries its own date; a weekly rule has to be projected onto
+    // the days of this particular week.
+    if (recurrence.kind === 'once') {
+      if (!dates.includes(recurrence.date)) continue
+      if (cancelled.has(`${entry.id}|${recurrence.date}`)) continue
+
+      occurrences.push({
+        entryId: entry.id,
+        subjectId: entry.subjectId,
+        title: entry.title,
+        location: entry.location,
+        date: recurrence.date,
+        start: recurrence.start,
+        end: recurrence.end,
+      })
+      continue
+    }
+
     if (!matchesParity(recurrence.parity, weekIndex)) continue
     if (!matchesWeekRange(recurrence.weeks, weekIndex)) continue
 

@@ -15,19 +15,20 @@ const entries: TimetableEntry[] = [
     subjectId: 'math',
     title: 'Linear Algebra',
     location: 'B3',
-    recurrence: { days: [1, 3], start: 540, end: 630, parity: 'all' },
+    recurrence: { kind: 'weekly', days: [1, 3], start: 540, end: 630, parity: 'all' },
   },
   {
     id: 'physics',
     subjectId: 'phys',
     title: 'Physics',
-    recurrence: { days: [2, 4], start: 660, end: 780, parity: 'odd' },
+    recurrence: { kind: 'weekly', days: [2, 4], start: 660, end: 780, parity: 'odd' },
   },
   {
     id: 'lab',
     subjectId: 'phys',
     title: 'Physics Lab',
     recurrence: {
+      kind: 'weekly',
       days: [5],
       start: 840,
       end: 1020,
@@ -110,7 +111,7 @@ describe('expandWeek', () => {
       id: 'dup',
       subjectId: 'math',
       title: 'Duplicate',
-      recurrence: { days: [1, 1], start: 540, end: 600, parity: 'all' },
+      recurrence: { kind: 'weekly', days: [1, 1], start: 540, end: 600, parity: 'all' },
     }
     expect(expandWeek(term, [duplicate], [], 9)).toHaveLength(1)
   })
@@ -120,7 +121,7 @@ describe('expandWeek', () => {
       id: 'broken',
       subjectId: 'math',
       title: 'Broken',
-      recurrence: { days: [1], start: 600, end: 600, parity: 'all' },
+      recurrence: { kind: 'weekly', days: [1], start: 600, end: 600, parity: 'all' },
     }
     expect(expandWeek(term, [broken], [], 9)).toEqual([])
   })
@@ -164,7 +165,7 @@ describe('weeks that do not start on Monday', () => {
       id: 'monday',
       subjectId: 's',
       title: 'Monday lecture',
-      recurrence: { days: [1], start: 540, end: 600, parity: 'all' },
+      recurrence: { kind: 'weekly', days: [1], start: 540, end: 600, parity: 'all' },
     },
   ]
 
@@ -181,7 +182,7 @@ describe('weeks that do not start on Monday', () => {
         id: 'sunday',
         subjectId: 's',
         title: 'Sunday lecture',
-        recurrence: { days: [7], start: 540, end: 600, parity: 'all' },
+        recurrence: { kind: 'weekly', days: [7], start: 540, end: 600, parity: 'all' },
       },
     ]
     const [occurrence] = expandWeek(sundayTerm, sunday, [], 1)
@@ -193,7 +194,7 @@ describe('weeks that do not start on Monday', () => {
       {
         ...monday[0],
         id: 'odd',
-        recurrence: { days: [1], start: 540, end: 600, parity: 'odd' },
+        recurrence: { kind: 'weekly', days: [1], start: 540, end: 600, parity: 'odd' },
       },
     ]
     expect(expandWeek(sundayTerm, odd, [], 1)).toHaveLength(1)
@@ -206,6 +207,69 @@ describe('weeks that do not start on Monday', () => {
       1,
     )
     expect(result).toHaveLength(0)
+  })
+})
+
+describe('one-off sessions', () => {
+  const openDay: TimetableEntry[] = [
+    {
+      id: 'open-day',
+      subjectId: 'personal',
+      title: 'Open day',
+      recurrence: { kind: 'once', date: '2026-11-07', start: 600, end: 780 },
+    },
+  ]
+
+  it('appears in the week that contains its date', () => {
+    // Week 9 runs Mon 2 Nov – Sun 8 Nov 2026.
+    const result = expandWeek(term, openDay, [], 9)
+    expect(result).toHaveLength(1)
+    expect(result[0].date).toBe('2026-11-07')
+  })
+
+  it('appears in exactly one week of the term', () => {
+    const weeks = Array.from({ length: term.weekCount }, (_, i) =>
+      expandWeek(term, openDay, [], i + 1),
+    )
+    const total = weeks.reduce((sum, week) => sum + week.length, 0)
+    expect(total).toBe(1)
+  })
+
+  it('is absent from neighbouring weeks', () => {
+    expect(expandWeek(term, openDay, [], 8)).toEqual([])
+    expect(expandWeek(term, openDay, [], 10)).toEqual([])
+  })
+
+  it('carries its own time and details', () => {
+    const [occurrence] = expandWeek(term, openDay, [], 9)
+    expect(occurrence).toMatchObject({
+      title: 'Open day',
+      subjectId: 'personal',
+      start: 600,
+      end: 780,
+    })
+  })
+
+  it('can still be cancelled', () => {
+    const result = expandWeek(
+      term,
+      openDay,
+      [{ entryId: 'open-day', date: '2026-11-07', kind: 'cancelled' }],
+      9,
+    )
+    expect(result).toEqual([])
+  })
+
+  it('ignores week parity entirely', () => {
+    // Even weeks would exclude a parity rule; a one-off has no parity to check.
+    const evenWeek = expandWeek(term, openDay, [], 10)
+    expect(evenWeek).toEqual([])
+    expect(expandWeek(term, openDay, [], 9)).toHaveLength(1)
+  })
+
+  it('shows up through expandRange', () => {
+    const result = expandRange(term, openDay, [], '2026-11-01', '2026-11-14')
+    expect(result).toHaveLength(1)
   })
 })
 

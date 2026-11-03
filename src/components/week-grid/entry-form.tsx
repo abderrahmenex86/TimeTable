@@ -17,11 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { todayKey } from '@/domain/dates'
 import { parseClock } from '@/domain/time'
 import {
   SUBJECT_COLORS,
   WEEKDAYS,
   WEEKDAY_LABELS,
+  type Recurrence,
   type Subject,
   type SubjectColor,
   type TimetableEntry,
@@ -35,33 +37,48 @@ import { useUndoable } from '@/store/undo'
 
 const NEW_SUBJECT = '__new__'
 
-const PARITIES: Array<{ value: WeekParity; label: string }> = [
+/** The repeat choices surfaced in the form. `once` maps to a one-off entry. */
+type RepeatChoice = WeekParity | 'once'
+
+const REPEAT_OPTIONS: Array<{ value: RepeatChoice; label: string }> = [
   { value: 'all', label: 'Every week' },
   { value: 'odd', label: 'Odd weeks' },
   { value: 'even', label: 'Even weeks' },
+  { value: 'once', label: 'Never' },
 ]
 
 type FormState = {
   title: string
   subjectId: string
   location: string
+  repeat: RepeatChoice
+  /** Only meaningful when `repeat` is `once`. */
+  date: string
   days: Weekday[]
   start: string
   end: string
-  parity: WeekParity
   newSubjectName: string
   newSubjectColor: SubjectColor
 }
 
 function initialState(entry: TimetableEntry | null): FormState {
+  const recurrence = entry?.recurrence
+  const isOnce = recurrence?.kind === 'once'
+
   return {
     title: entry?.title ?? '',
     subjectId: entry?.subjectId ?? '',
     location: entry?.location ?? '',
-    days: entry ? [...entry.recurrence.days] : [],
-    start: minuteToInput(entry?.recurrence.start ?? 9 * 60),
-    end: minuteToInput(entry?.recurrence.end ?? 10 * 60 + 30),
-    parity: entry?.recurrence.parity ?? 'all',
+    repeat: isOnce
+      ? 'once'
+      : recurrence?.kind === 'weekly'
+        ? recurrence.parity
+        : 'all',
+    date: isOnce ? recurrence.date : '',
+    days:
+      recurrence?.kind === 'weekly' ? [...recurrence.days] : [],
+    start: minuteToInput(recurrence?.start ?? 9 * 60),
+    end: minuteToInput(recurrence?.end ?? 10 * 60 + 30),
     newSubjectName: '',
     newSubjectColor: 'sky',
   }
@@ -94,6 +111,15 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
+  /** Picking "Never" seeds a date so the field is never blank. */
+  function chooseRepeat(value: RepeatChoice) {
+    setForm((current) => ({
+      ...current,
+      repeat: value,
+      date: value === 'once' && !current.date ? todayKey() : current.date,
+    }))
+  }
+
   function toggleDay(day: Weekday) {
     setForm((current) => ({
       ...current,
@@ -108,13 +134,17 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
 
     const start = parseClock(form.start)
     const end = parseClock(form.end)
+    const once = form.repeat === 'once'
 
     if (!form.title.trim()) return setError('Give the session a name.')
     if (!form.subjectId) return setError('Pick a subject.')
     if (form.subjectId === NEW_SUBJECT && !form.newSubjectName.trim()) {
       return setError('Name the new subject.')
     }
-    if (form.days.length === 0) return setError('Pick at least one day.')
+    if (once && !form.date) return setError('Pick a date for this session.')
+    if (!once && form.days.length === 0) {
+      return setError('Pick at least one day, or set it to never repeat.')
+    }
     if (start === null || end === null) return setError('Check the start and end times.')
     if (end <= start) return setError('The end time has to be after the start.')
 
@@ -129,12 +159,16 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
       subjectId = subject.id
     }
 
-    const recurrence = {
-      days: form.days,
-      start,
-      end,
-      parity: form.parity,
-    }
+    const recurrence: Recurrence = once
+      ? { kind: 'once', date: form.date, start, end }
+      : {
+          kind: 'weekly',
+          days: form.days,
+          start,
+          end,
+          // `once` is handled above, so this is a plain parity value.
+          parity: form.repeat === 'once' ? 'all' : form.repeat,
+        }
 
     if (entry) {
       updateEntry(entry.id, {
@@ -156,6 +190,8 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
     onOpenChange(false)
   }
 
+  const isOnce = form.repeat === 'once'
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -164,8 +200,7 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
             {entry ? 'Edit session' : 'New session'}
           </DialogTitle>
           <DialogDescription>
-            Sessions repeat. Set the days and times once and every week of the
-            term follows.
+            Sessions can repeat across the term, or happen just once on a date.
           </DialogDescription>
         </DialogHeader>
 
@@ -236,38 +271,12 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
                         ? 'scale-110 border-ink'
                         : 'border-transparent',
                     )}
-                    style={{ backgroundColor: `var(--color-${color}-fill)` }}
+                    style={{ backgroundColor: `var(--${color}-fill)` }}
                   />
                 ))}
               </div>
             </div>
           ) : null}
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Days</Label>
-            <div className="flex gap-1">
-              {WEEKDAYS.map((day) => {
-                const active = form.days.includes(day)
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => toggleDay(day)}
-                    className={cn(
-                      'h-8 flex-1 border text-[0.68rem] transition-colors',
-                      active
-                        ? 'border-sky-pen bg-sky-fill text-sky-pen'
-                        : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
-                    )}
-                    style={{ borderRadius: '7px 2px 8px 3px / 3px 8px 2px 7px' }}
-                  >
-                    {WEEKDAY_LABELS[day]}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
@@ -291,24 +300,62 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-parity">Repeats</Label>
+              <Label htmlFor="entry-repeat">Repeats</Label>
               <Select
-                value={form.parity}
-                onValueChange={(value) => set('parity', value as WeekParity)}
+                value={form.repeat}
+                onValueChange={(value) => chooseRepeat(value as RepeatChoice)}
               >
-                <SelectTrigger id="entry-parity" className="w-full">
+                <SelectTrigger id="entry-repeat" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PARITIES.map((parity) => (
-                    <SelectItem key={parity.value} value={parity.value}>
-                      {parity.label}
+                  {REPEAT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {isOnce ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="entry-date">Date</Label>
+              <Input
+                id="entry-date"
+                type="date"
+                value={form.date}
+                onChange={(event) => set('date', event.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label>Days</Label>
+              <div className="flex gap-1">
+                {WEEKDAYS.map((day) => {
+                  const active = form.days.includes(day)
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => toggleDay(day)}
+                      className={cn(
+                        'h-8 flex-1 border-[1.5px] font-hand text-[0.72rem] transition-colors',
+                        active
+                          ? 'border-sky-pen bg-sky-fill text-sky-pen'
+                          : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
+                      )}
+                      style={{ borderRadius: '7px 2px 8px 3px / 3px 8px 2px 7px' }}
+                    >
+                      {WEEKDAY_LABELS[day]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {error ? (
             <p className="text-[0.72rem] text-rose-pen" role="alert">

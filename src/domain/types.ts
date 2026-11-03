@@ -71,18 +71,28 @@ export type WeekRange = { from: number; to: number }
 
 export type WeekParity = 'all' | 'odd' | 'even'
 
+/** Every variant shares the time of day. */
+type RecurrenceTime = { start: Minute; end: Minute }
+
 /**
- * A repeating commitment. Deliberately not RFC 5545 — this covers what a
- * timetable actually needs and nothing more.
+ * A repeating commitment, or a single dated session.
+ *
+ * Deliberately not RFC 5545 — this covers what a timetable actually needs. The
+ * union matters: a one-off has a date and no days, so `days` and `parity` are
+ * only reachable after narrowing to `weekly`.
  */
-export type Recurrence = {
-  days: Weekday[]
-  start: Minute
-  end: Minute
-  parity: WeekParity
-  /** Omit for "every week of the term". */
-  weeks?: WeekRange
-}
+export type Recurrence =
+  | (RecurrenceTime & {
+      kind: 'weekly'
+      days: Weekday[]
+      parity: WeekParity
+      /** Omit for "every week of the term". */
+      weeks?: WeekRange
+    })
+  | (RecurrenceTime & {
+      kind: 'once'
+      date: DateKey
+    })
 
 /** The stored rule. Never rendered directly — project it into a week first. */
 export type TimetableEntry = {
