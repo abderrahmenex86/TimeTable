@@ -34,6 +34,7 @@ type Actions = {
   setWeekIndex: (index: number) => void
   goToToday: () => void
   setHydrated: () => void
+  toggleFreeTime: () => void
 
   addSubject: (subject: Subject) => void
   updateSubject: (id: string, patch: Partial<Subject>) => void
@@ -62,6 +63,8 @@ type Actions = {
 export type TimetableState = TimetableData & {
   /** Which teaching week the grid is showing. Transient. */
   weekIndex: number
+  /** Whether free gaps are highlighted on the grid. Transient. */
+  showFreeTime: boolean
   /** False until IndexedDB has been read. */
   hydrated: boolean
   /** Snapshots for undo. Transient — deliberately not persisted. */
@@ -83,6 +86,7 @@ export const useTimetable = create<TimetableState>()(
       return {
         ...seed,
         weekIndex: startWeek,
+        showFreeTime: false,
         hydrated: false,
         undoStack: [],
 
@@ -100,6 +104,9 @@ export const useTimetable = create<TimetableState>()(
           })),
 
         setHydrated: () => set({ hydrated: true }),
+
+        toggleFreeTime: () =>
+          set((state) => ({ showFreeTime: !state.showFreeTime })),
 
         addSubject: (subject) =>
           set((state) => ({ subjects: [...state.subjects, subject] })),

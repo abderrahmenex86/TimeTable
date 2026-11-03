@@ -33,17 +33,17 @@
      Each subject is a pair: a pastel fill for the block body, and a "pen"
      tone that carries text and the accent bar. Every pen clears 4.5:1 on its
      own fill, so subject colour never has to be the only signal.            */
-  --color-rose-fill: #fbe0de;
+  --color-rose-fill: #fadad6;
   --color-rose-pen: #a34a3c;
-  --color-sage-fill: #deebdc;
+  --color-sage-fill: #d9e8d6;
   --color-sage-pen: #4e6b4a;
-  --color-sky-fill: #dce8f2;
+  --color-sky-fill: #d6e4f2;
   --color-sky-pen: #3f5f79;
-  --color-butter-fill: #f8eeda;
+  --color-butter-fill: #f7e8cd;
   --color-butter-pen: #8a6a32;
-  --color-lilac-fill: #e8e1f2;
+  --color-lilac-fill: #e4daf1;
   --color-lilac-pen: #665282;
-  --color-mint-fill: #dcefe8;
+  --color-mint-fill: #d5ebe1;
   --color-mint-pen: #3f6e5f;
 
   /* --- type -------------------------------------------------------------
