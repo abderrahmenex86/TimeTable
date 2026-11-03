@@ -4,7 +4,7 @@ A week timetable that knows what time you actually have free.
 
 Classes and other fixed commitments sit on the grid. Tasks carry a deadline
 **and** an effort estimate, so the app can tell you where they fit instead of
-asking you to guess. Everything lives in IndexedDB — no account, no server.
+asking you to guess. Everything lives in IndexedDB. No account, no server.
 
 ![The week view with free time shown](docs/week.png)
 
@@ -22,7 +22,7 @@ remaining = estimateMinutes − Σ (scheduled blocks)
 
 A three-hour lab report due Friday is not "Thursday 14:00–17:00". It is three
 hours of work, a deadline, and a search for somewhere to put it. The app answers
-that search from the gaps between your commitments — and shows you the gaps.
+that search from the gaps between your commitments, and shows you the gaps.
 
 Scheduling work never completes a task. A task stays open until you tick it off,
 however much of it is already on the calendar.
@@ -44,7 +44,7 @@ however much of it is already on the calendar.
 - **Subjects** can be renamed and recoloured from the task panel; the change
   applies to every session using them.
 - **Find a slot**: every task has a button that places it in the earliest gap
-  before its deadline. This is also the keyboard and touch path — dragging is
+  before its deadline. This is also the keyboard and touch path. Dragging is
   mouse-only on purpose.
 - **Calendar lock**: with the lock on, tasks cannot be dragged onto the grid at
   all, which is what you want when you are just reading the week.
@@ -73,7 +73,7 @@ empty. **Settings → Reset demo data** restores it.
 
 ```
 src/
-  domain/      pure TypeScript — no React, no Zustand, no browser APIs
+  domain/      pure TypeScript: no React, no Zustand, no browser APIs
   store/       Zustand slices, IndexedDB persistence, scheduling hooks
   components/  week grid, day agenda, task panel, shell, shadcn primitives
   routes/      week view and settings
@@ -102,7 +102,7 @@ overlay, and "does this fit before my deadline". Two functions, about 40 lines,
 and every scheduling question in the app reduces to them.
 
 Times are integer minutes from midnight and dates are `YYYY-MM-DD` strings.
-Neither ever passes through `new Date()` for arithmetic — `new Date('2026-11-05')`
+Neither ever passes through `new Date()` for arithmetic. `new Date('2026-11-05')`
 parses as UTC midnight and lands on the previous day west of Greenwich.
 
 Week starts are a setting, so nothing may assume a Monday. Occurrences resolve
@@ -117,21 +117,21 @@ paired with darker "pen" tones. Two constraints keep it usable:
 
 - **Virgil carries voice, Inter carries speed.** Handwriting sets titles,
   labels and block text. Numerals, metadata and anything scanned in a list use
-  Inter with tabular figures — a proportional hand font makes a column of times
-  jitter.
+  Inter with tabular figures, because a proportional hand font makes a column of
+  times jitter.
 - **Pastel fill never carries meaning alone.** Every subject is a `fill`/`pen`
   pair, defined per theme. The pen tone clears 4.5:1 against its own fill and
   drives the text and the accent bar, so the timetable still reads in greyscale
   and stays legible in dark mode.
 
-The three panels — toolbar, calendar, tasks — are separate rounded cards inside
+The three panels (toolbar, calendar, tasks) are separate rounded cards inside
 one padded column, so they share edges and their header rules land on the same
 baseline.
 
 ## Known limits
 
 - One term at a time; there is no term switcher.
-- No sync — the data belongs to one browser profile.
+- No sync. The data belongs to one browser profile.
 - Cancelling a single session works; moving one does not (the rule would need
   a per-occurrence override).
 - A session is either weekly or dated; there is no "every second Tuesday"
