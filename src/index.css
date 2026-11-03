@@ -32,7 +32,27 @@
   /* --- subject pastels ---------------------------------------------------
      Each subject is a pair: a pastel fill for the block body, and a "pen"
      tone that carries text and the accent bar. Every pen clears 4.5:1 on its
-     own fill, so subject colour never has to be the only signal.            */
+     own fill, so subject colour never has to be the only signal.
+
+     `@theme static` matters here. These variables are only ever referenced
+     from an inline style built at runtime (`var(--color-${color}-fill)`), so
+     Tailwind's normal unused-variable pruning cannot see them and drops the
+     palette. Static forces all of them into the output.                     */
+  /* placeholder: see the static block below */
+
+  /* --- type -------------------------------------------------------------
+     Virgil carries voice (titles, labels, block text). Inter carries speed
+     (numerals, metadata, long-form input). See notes in README.            */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-hand: 'Virgil', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
+
+  /* --- motion ----------------------------------------------------------- */
+  --ease-pen: cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+
+/* Subject palette. `static` because these names are composed at runtime
+   (`var(--color-${color}-fill)`), which Tailwind's pruning cannot see. */
+@theme static {
   --color-rose-fill: #fadad6;
   --color-rose-pen: #a34a3c;
   --color-sage-fill: #d9e8d6;
@@ -45,15 +65,6 @@
   --color-lilac-pen: #665282;
   --color-mint-fill: #d5ebe1;
   --color-mint-pen: #3f6e5f;
-
-  /* --- type -------------------------------------------------------------
-     Virgil carries voice (titles, labels, block text). Inter carries speed
-     (numerals, metadata, long-form input). See notes in README.            */
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-hand: 'Virgil', 'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive;
-
-  /* --- motion ----------------------------------------------------------- */
-  --ease-pen: cubic-bezier(0.3, 0.9, 0.4, 1);
 }
 
 /* =================================================== shadcn ui mapping === */
