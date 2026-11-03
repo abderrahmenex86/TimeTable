@@ -48,6 +48,8 @@ function blockStyle({
 
 const SKETCH_RADIUS = '6px 2px 7px 3px / 3px 7px 2px 6px'
 
+export { SKETCH_RADIUS }
+
 type EntryBlockProps = BlockProps & {
   occurrence: Occurrence
   color?: SubjectColor

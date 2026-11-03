@@ -1,8 +1,19 @@
+import { useDraggable } from '@dnd-kit/core'
+import { CalendarPlus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { formatDayMonth } from '@/domain/dates'
 import type { Moment } from '@/domain/tasks'
+import { formatClock } from '@/domain/time'
 import type { Subject, Task, TaskBlock } from '@/domain/types'
 import { DEADLINE_TONE_CLASS, describeDeadline } from '@/lib/deadline'
 import { cn } from '@/lib/utils'
+import { useScheduling } from '@/store/scheduling'
 import { useTimetable } from '@/store/timetable-store'
 import { EffortBar } from './effort-bar'
 
@@ -16,23 +27,43 @@ type TaskCardProps = {
 
 export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) {
   const toggleTask = useTimetable((state) => state.toggleTask)
+  const { placeInNextSlot } = useScheduling()
+
+  // Only the pointer listeners are attached. Spreading dnd-kit's `attributes`
+  // would put role="button" on a container that already holds real buttons.
+  const { setNodeRef, listeners, isDragging } = useDraggable({
+    id: task.id,
+    data: { taskId: task.id },
+  })
+
   const done = task.status === 'done'
   const deadline = describeDeadline(task, now)
+
+  function handlePlace() {
+    const slot = placeInNextSlot(task)
+    if (!slot) {
+      toast.error('No free slot', {
+        description: 'Nothing fits in the next two weeks before the deadline.',
+      })
+      return
+    }
+    toast.success(`Placed ${task.title}`, {
+      description: `${formatDayMonth(slot.date)} · ${formatClock(slot.start)}–${formatClock(slot.end)}`,
+    })
+  }
 
   return (
     <li>
       <div
+        ref={setNodeRef}
+        {...listeners}
         className={cn(
-          'flex items-start gap-2 border border-rule bg-paper-raised px-2.5 py-2 transition-colors',
+          'group flex cursor-grab items-start gap-2 border border-rule bg-paper-raised px-2.5 py-2 transition-colors active:cursor-grabbing',
           !done && 'hover:border-ink-30',
           done && 'opacity-70',
+          isDragging && 'opacity-40',
         )}
         style={{ borderRadius: '10px 3px 11px 4px / 4px 11px 3px 10px' }}
-        onClick={(event) => {
-          // The title button is the accessible control; clicking anywhere else
-          // on the card is a convenience shortcut to the same dialog.
-          if (event.target === event.currentTarget) onEdit(task)
-        }}
       >
         <Checkbox
           checked={done}
@@ -42,29 +73,45 @@ export function TaskCard({ task, subject, blocks, now, onEdit }: TaskCardProps) 
         />
 
         <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => onEdit(task)}
-            className="block w-full rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            <span
-              className={cn(
-                'font-hand text-[0.95rem] leading-[1.25]',
-                done ? 'text-ink-40 line-through' : 'text-ink',
-              )}
+          <div className="flex items-start gap-1">
+            <button
+              type="button"
+              onClick={() => onEdit(task)}
+              className="block min-w-0 flex-1 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              {task.title}
-            </span>
-          </button>
+              <span
+                className={cn(
+                  'font-hand text-[0.95rem] leading-[1.25]',
+                  done ? 'text-ink-40 line-through' : 'text-ink',
+                )}
+              >
+                {task.title}
+              </span>
+            </button>
+
+            {!done ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handlePlace}
+                    aria-label={`Place ${task.title} in the next free slot`}
+                    className="mt-0.5 shrink-0 rounded-sm p-0.5 text-ink-40 opacity-0 transition-opacity hover:text-sky-pen focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink group-hover:opacity-100"
+                  >
+                    <CalendarPlus className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Find the next free slot</TooltipContent>
+              </Tooltip>
+            ) : null}
+          </div>
 
           <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[0.68rem]">
             {subject ? (
               <span className="inline-flex items-center gap-1 text-ink-60">
                 <span
                   className="size-[6px] shrink-0 rounded-full"
-                  style={{
-                    backgroundColor: `var(--color-${subject.color}-pen)`,
-                  }}
+                  style={{ backgroundColor: `var(--color-${subject.color}-pen)` }}
                 />
                 {subject.name}
               </span>
