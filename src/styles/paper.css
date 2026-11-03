@@ -31,9 +31,20 @@ body {
   color: var(--sky-pen);
 }
 
+/*
+ * Scrollbars are hidden but scrolling still works — wheel, trackpad, touch and
+ * keyboard all behave normally. The panels are sized so their content is
+ * obviously scrollable without a visible track.
+ */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--fg-30) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 /* ------------------------------------------------------------- textures --- */
