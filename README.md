@@ -1,5 +1,7 @@
 # TimeTable
 
+[Live demo](https://timetable.abderrahmene.me)
+
 A week timetable that knows what time you actually have free.
 
 Classes and other fixed commitments sit on the grid. Tasks carry a deadline
