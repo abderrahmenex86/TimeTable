@@ -1,4 +1,4 @@
-# Timetable
+# TimeTable
 
 A week timetable that knows what time you actually have free.
 
