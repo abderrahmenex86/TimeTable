@@ -124,107 +124,110 @@ export function TaskForm({ open, onOpenChange, task, subjects }: TaskFormProps) 
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-title">Title</Label>
-            <Input
-              id="task-title"
-              value={form.title}
-              onChange={(event) => set('title', event.target.value)}
-              placeholder="Lab report draft"
-              aria-invalid={showErrors && titleMissing}
-              autoFocus
-            />
-            {showErrors && titleMissing ? (
-              <p className="text-[0.72rem] text-rose-pen">
-                Give it a name so you can find it later.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="dialog-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-subject">Subject</Label>
-              <Select
-                value={form.subjectId}
-                onValueChange={(value) => set('subjectId', value)}
-              >
-                <SelectTrigger id="task-subject" className="w-full">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_SUBJECT}>No subject</SelectItem>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-priority">Priority</Label>
-              <Select
-                value={form.priority}
-                onValueChange={(value) => set('priority', value as Priority)}
-              >
-                <SelectTrigger id="task-priority" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIORITIES.map((priority) => (
-                    <SelectItem key={priority.value} value={priority.value}>
-                      {priority.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-date">Due date</Label>
-              <DateField
-                id="task-date"
-                value={form.date}
-                onChange={(value) => set('date', value)}
-                placeholder="None"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-time">Time</Label>
-              <TimeField
-                id="task-time"
-                value={form.time}
-                onChange={(minute) => set('time', minute)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="task-estimate">Minutes</Label>
+              <Label htmlFor="task-title">Title</Label>
               <Input
-                id="task-estimate"
-                type="number"
-                min={1}
-                step={1}
-                value={form.estimate}
-                onChange={(event) => set('estimate', event.target.value)}
+                id="task-title"
+                value={form.title}
+                onChange={(event) => set('title', event.target.value)}
+                placeholder="Lab report draft"
+                aria-invalid={showErrors && titleMissing}
+                autoFocus
+              />
+              {showErrors && titleMissing ? (
+                <p className="text-[0.72rem] text-rose-pen">
+                  Give it a name so you can find it later.
+                </p>
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="task-subject">Subject</Label>
+                <Select
+                  value={form.subjectId}
+                  onValueChange={(value) => set('subjectId', value)}
+                >
+                  <SelectTrigger id="task-subject" className="w-full">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_SUBJECT}>No subject</SelectItem>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="task-priority">Priority</Label>
+                <Select
+                  value={form.priority}
+                  onValueChange={(value) => set('priority', value as Priority)}
+                >
+                  <SelectTrigger id="task-priority" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORITIES.map((priority) => (
+                      <SelectItem key={priority.value} value={priority.value}>
+                        {priority.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-[1fr_1fr_0.8fr] gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="task-date">Due date</Label>
+                <DateField
+                  id="task-date"
+                  value={form.date}
+                  onChange={(value) => set('date', value)}
+                  placeholder="None"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="task-time">Time</Label>
+                <TimeField
+                  id="task-time"
+                  value={form.time}
+                  onChange={(minute) => set('time', minute)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="task-estimate">Minutes</Label>
+                <Input
+                  id="task-estimate"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={form.estimate}
+                  onChange={(event) => set('estimate', event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="task-notes">Notes</Label>
+              <Textarea
+                id="task-notes"
+                value={form.notes}
+                onChange={(event) => set('notes', event.target.value)}
+                rows={2}
+                placeholder="Anything you will forget otherwise"
               />
             </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="task-notes">Notes</Label>
-            <Textarea
-              id="task-notes"
-              value={form.notes}
-              onChange={(event) => set('notes', event.target.value)}
-              rows={2}
-              placeholder="Anything you will forget otherwise"
-            />
           </div>
 
           <DialogFooter className="mt-1">

@@ -195,178 +195,181 @@ export function EntryForm({ open, onOpenChange, entry, subjects }: EntryFormProp
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="entry-title">Title</Label>
-            <Input
-              id="entry-title"
-              value={form.title}
-              onChange={(event) => set('title', event.target.value)}
-              placeholder="Linear Algebra"
-              autoFocus
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="dialog-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-subject">Subject</Label>
-              <Select
-                value={form.subjectId}
-                onValueChange={(value) => set('subjectId', value)}
-              >
-                <SelectTrigger id="entry-subject" className="w-full">
-                  <SelectValue placeholder="Choose" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value={NEW_SUBJECT}>New subject…</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-location">Location</Label>
+              <Label htmlFor="entry-title">Title</Label>
               <Input
-                id="entry-location"
-                value={form.location}
-                onChange={(event) => set('location', event.target.value)}
-                placeholder="Room B3"
+                id="entry-title"
+                value={form.title}
+                onChange={(event) => set('title', event.target.value)}
+                placeholder="Linear Algebra"
+                autoFocus
               />
             </div>
-          </div>
 
-          {form.subjectId === NEW_SUBJECT ? (
-            <div className="sketch-sm flex flex-col gap-2 bg-paper-sunk/60 p-2.5">
-              <Label htmlFor="entry-new-subject">New subject</Label>
-              <Input
-                id="entry-new-subject"
-                value={form.newSubjectName}
-                onChange={(event) => set('newSubjectName', event.target.value)}
-                placeholder="Organic Chemistry"
-              />
-              <div className="flex items-center gap-1.5">
-                {SUBJECT_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    aria-label={color}
-                    aria-pressed={form.newSubjectColor === color}
-                    onClick={() => set('newSubjectColor', color)}
-                    className={cn(
-                      'size-6 rounded-full border-2 transition-transform',
-                      form.newSubjectColor === color
-                        ? 'scale-110 border-ink'
-                        : 'border-transparent',
-                    )}
-                    style={{ backgroundColor: `var(--${color}-fill)` }}
-                  />
-                ))}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="entry-subject">Subject</Label>
+                <Select
+                  value={form.subjectId}
+                  onValueChange={(value) => set('subjectId', value)}
+                >
+                  <SelectTrigger id="entry-subject" className="w-full">
+                    <SelectValue placeholder="Choose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={NEW_SUBJECT}>New subject…</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          ) : null}
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-start">Start</Label>
-              <TimeField
-                id="entry-start"
-                value={form.start}
-                onChange={(minute) => set('start', minute)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-end">End</Label>
-              <TimeField
-                id="entry-end"
-                value={form.end}
-                onChange={(minute) => set('end', minute)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="entry-repeat">Repeats</Label>
-              <Select
-                value={form.repeat}
-                onValueChange={(value) => set('repeat', value as RepeatChoice)}
-              >
-                <SelectTrigger id="entry-repeat" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {REPEAT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {isNever ? (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-baseline justify-between">
-                <Label>Dates</Label>
-                <span className="text-[0.7rem] text-ink-40" data-num>
-                  {form.dates.length === 0
-                    ? 'none selected'
-                    : `${form.dates.length} selected`}
-                </span>
-              </div>
-              <div className="flex justify-center rounded-lg border border-rule bg-paper-sunk/40 p-1">
-                <Calendar
-                  mode="multiple"
-                  selected={form.dates.map(dateKeyToDate)}
-                  onSelect={(dates) =>
-                    set(
-                      'dates',
-                      (dates ?? []).map(dateToDateKey).sort(),
-                    )
-                  }
-                  disabled={{ before: termStart, after: termEnd }}
-                  startMonth={termStart}
-                  endMonth={termEnd}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="entry-location">Location</Label>
+                <Input
+                  id="entry-location"
+                  value={form.location}
+                  onChange={(event) => set('location', event.target.value)}
+                  placeholder="Room B3"
                 />
               </div>
             </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <Label>Days</Label>
-              <div className="flex gap-1">
-                {WEEKDAYS.map((day) => {
-                  const active = form.days.includes(day)
-                  return (
+
+            {form.subjectId === NEW_SUBJECT ? (
+              <div className="sketch-sm flex flex-col gap-2 bg-paper-sunk/60 p-2.5">
+                <Label htmlFor="entry-new-subject">New subject</Label>
+                <Input
+                  id="entry-new-subject"
+                  value={form.newSubjectName}
+                  onChange={(event) => set('newSubjectName', event.target.value)}
+                  placeholder="Organic Chemistry"
+                />
+                <div className="flex items-center gap-1.5">
+                  {SUBJECT_COLORS.map((color) => (
                     <button
-                      key={day}
+                      key={color}
                       type="button"
-                      aria-pressed={active}
-                      onClick={() => toggleDay(day)}
+                      aria-label={color}
+                      aria-pressed={form.newSubjectColor === color}
+                      onClick={() => set('newSubjectColor', color)}
                       className={cn(
-                        'h-8 flex-1 border-[1.5px] font-hand text-[0.72rem] transition-colors',
-                        active
-                          ? 'border-sky-pen bg-sky-fill text-sky-pen'
-                          : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
+                        'size-6 rounded-full border-2 transition-transform',
+                        form.newSubjectColor === color
+                          ? 'scale-110 border-ink'
+                          : 'border-transparent',
                       )}
-                      style={{ borderRadius: '7px 2px 8px 3px / 3px 8px 2px 7px' }}
-                    >
-                      {WEEKDAY_LABELS[day]}
-                    </button>
-                  )
-                })}
+                      style={{ backgroundColor: `var(--${color}-fill)` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="entry-start">Start</Label>
+                <TimeField
+                  id="entry-start"
+                  value={form.start}
+                  onChange={(minute) => set('start', minute)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="entry-end">End</Label>
+                <TimeField
+                  id="entry-end"
+                  value={form.end}
+                  onChange={(minute) => set('end', minute)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="entry-repeat">Repeats</Label>
+                <Select
+                  value={form.repeat}
+                  onValueChange={(value) => set('repeat', value as RepeatChoice)}
+                >
+                  <SelectTrigger id="entry-repeat" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REPEAT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
 
-          {error ? (
-            <p className="text-[0.72rem] text-rose-pen" role="alert">
-              {error}
-            </p>
-          ) : null}
+            {isNever ? (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-baseline justify-between">
+                  <Label>Dates</Label>
+                  <span className="text-[0.7rem] text-ink-40" data-num>
+                    {form.dates.length === 0
+                      ? 'none selected'
+                      : `${form.dates.length} selected`}
+                  </span>
+                </div>
+                <div className="flex justify-center rounded-lg border border-rule bg-paper-sunk/40 p-1">
+                  <Calendar
+                    mode="multiple"
+                    selected={form.dates.map(dateKeyToDate)}
+                    onSelect={(dates) =>
+                      set(
+                        'dates',
+                        (dates ?? []).map(dateToDateKey).sort(),
+                      )
+                    }
+                    disabled={{ before: termStart, after: termEnd }}
+                    startMonth={termStart}
+                    endMonth={termEnd}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Label>Days</Label>
+                <div className="flex gap-1">
+                  {WEEKDAYS.map((day) => {
+                    const active = form.days.includes(day)
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => toggleDay(day)}
+                        className={cn(
+                          'h-8 flex-1 border-[1.5px] font-hand text-[0.72rem] transition-colors',
+                          active
+                            ? 'border-sky-pen bg-sky-fill text-sky-pen'
+                            : 'border-rule bg-paper-raised text-ink-60 hover:border-ink-30',
+                        )}
+                        style={{ borderRadius: '7px 2px 8px 3px / 3px 8px 2px 7px' }}
+                      >
+                        {WEEKDAY_LABELS[day]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {error ? (
+              <p className="text-[0.72rem] text-rose-pen" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+          </div>
 
           <DialogFooter className="mt-1">
             {entry ? (

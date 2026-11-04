@@ -47,6 +47,27 @@ body {
   display: none;
 }
 
+/*
+ * A dialog can outgrow the viewport, and a form whose submit button is off
+ * screen with no visible scrollbar looks broken. This one place keeps a thin
+ * scrollbar so the scroll area announces itself.
+ */
+.dialog-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg-30) transparent;
+}
+
+.dialog-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  display: block;
+}
+
+.dialog-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--fg-30);
+  border-radius: 3px;
+}
+
 /* ------------------------------------------------------------- textures --- */
 
 /* Bullet-journal dot grid. Desktop week view. */
